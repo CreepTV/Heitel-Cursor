@@ -29,7 +29,7 @@ npm install
 
 ## Benutzung
 
-So verwenden Sie das Heitel Cursor Projekt:
+So verwenden Sie das Heitel Cursors Projekt:
 
 ```bash
 npm start
