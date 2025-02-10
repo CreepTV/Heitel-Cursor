@@ -1,2 +1,1 @@
-# Heitel-Cursors
-Heitel Cursors ist eine Windows-Anwendung, die es Nutzern ermöglicht, das Aussehen ihres Mauszeigers zu verändern. Die Software wurde von Creep Media entwickelt und befindet sich derzeit in der Closed-Beta-Phase.
+Heitel Cursors ist eine Windows-Anwendung, die es Nutzern ermöglicht, das Aussehen ihres Mauszeigers zu verändern. Die Software wurde von Creep Media entwickelt und befindet sich derzeit in der Beta-Phase. Sie zeichnet sich insbesondere dadurch aus, dass der Cursor vergrößert und durch ein Bild des Gesichts von Joachim Heitel, ersetzt wird.
