@@ -17,7 +17,7 @@ Willkommen zum Heitel Cursor Projekt! Diese Seite dient als zentrale Anlaufstell
 Das Heitel Cursor Projekt ist ein Open-Source-Projekt, das darauf abzielt, eine benutzerfreundliche und effiziente Cursorsteuerung zu entwickeln. Heitel Cursors ist eine Windows-Anwendung, die es Nutzern ermöglicht, das Aussehen ihres Mauszeigers zu verändern. Die Software wurde von Creep Media entwickelt und befindet sich derzeit in der Beta-Phase. Sie zeichnet sich insbesondere dadurch aus, dass der Cursor vergrößert und durch ein Bild des Gesichts von Joachim Heitel ersetzt wird.
 
 ## Installation
-Eine ausführbare Datei (EXE) der Anwendung kann von der [GitHub Releases-Seite](https://github.com/HeitelCursor/Heitel-Cursor-Projekt/releases) heruntergeladen werden.
+Eine ausführbare Datei (EXE) der Anwendung kann von der [GitHub Releases-Seite](https://github.com/CreepTV/Heitel-Cursors/releases) heruntergeladen werden.
 
 Anweisungen zur Installation des Projekts:
 
