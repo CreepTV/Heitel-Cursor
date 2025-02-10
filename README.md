@@ -1,6 +1,6 @@
-# Heitel Cursor Projekt
+# Heitel Cursors
 
-Willkommen zum Heitel Cursor Projekt! Diese Seite dient als zentrale Anlaufstelle für alle Informationen und Dokumentationen rund um das Projekt.
+Willkommen zum Heitel Cursors Projekt! Diese Seite dient als zentrale Anlaufstelle für alle Informationen und Dokumentationen rund um das Projekt.
 
 ## Inhaltsverzeichnis
 
