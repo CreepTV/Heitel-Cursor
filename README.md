@@ -18,6 +18,7 @@ Das Heitel Cursor Projekt ist ein Open-Source-Projekt, das darauf abzielt, eine 
 
 ## Installation
 > ℹ️ Eine ausführbare Datei (EXE) der Anwendung kann von der [GitHub Releases-Seite](https://github.com/CreepTV/Heitel-Cursors/releases) heruntergeladen werden.
+<br>
 
 Anweisungen zur Installation des Projekts:
 
