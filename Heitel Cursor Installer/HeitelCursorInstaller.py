@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import io
 import subprocess
 import ctypes  # Add this import
+import sys  # Add this import
 
 GITHUB_API = "https://api.github.com/repos/CreepTV/Heitel-Cursors/releases"
 DEFAULT_INSTALL_DIR = os.path.join(os.environ['ProgramFiles'], "HeitelCursors")
@@ -23,27 +24,6 @@ def download_file(url, dest):
         for chunk in response.iter_content(chunk_size=8192):
             file.write(chunk)
 
-def install(version, install_dir):
-    if version == "Neueste Version":
-        response = requests.get(f"{GITHUB_API}/latest")
-        response.raise_for_status()
-        release = response.json()
-    else:
-        tag_name = version.split(" - ")[0]
-        response = requests.get(f"{GITHUB_API}/tags/{tag_name}")
-        response.raise_for_status()
-        release = response.json()
-
-    exe_url = next(asset['browser_download_url'] for asset in release['assets'] if asset['name'].endswith('.exe'))
-    exe_name = f"HeitelCursor{version}.exe"
-    exe_path = os.path.join(install_dir, exe_name)
-
-    download_file(exe_url, exe_path)
-    messagebox.showinfo("Installation abgeschlossen", f"Die Anwendung wurde erfolgreich in {install_dir} installiert.")
-    
-    if messagebox.askyesno("Installation abgeschlossen", "Möchten Sie Heitel Cursor jetzt ausführen?"):
-        subprocess.Popen([exe_path])
-
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -52,54 +32,98 @@ def is_admin():
 
 def run_as_admin():
     if not is_admin():
-        if messagebox.askyesno("Administratorrechte erforderlich", "Dieses Programm muss mit Administratorrechten ausgeführt werden. Möchten Sie es als Administrator neu starten?"):
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-            exit()
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        exit()
 
-run_as_admin()
+def install(version, install_dir):
+    try:
+        if not os.access(install_dir, os.W_OK):
+            run_as_admin()
+        
+        if version == "Neueste Version":
+            response = requests.get(f"{GITHUB_API}/latest")
+            response.raise_for_status()
+            release = response.json()
+            version = release['tag_name']  # Setze den tatsächlichen Versionsnamen
+        else:
+            tag_name = version.split(" - ")[0]
+            response = requests.get(f"{GITHUB_API}/tags/{tag_name}")
+            response.raise_for_status()
+            release = response.json()
 
-def select_install_dir():
+        exe_asset = next(asset for asset in release['assets'] if asset['name'].endswith('.exe'))
+        exe_url = exe_asset['browser_download_url']
+        exe_name = exe_asset['name']
+        exe_path = os.path.join(install_dir, exe_name)
+
+        download_file(exe_url, exe_path)
+        show_completion_page(exe_path)
+    except Exception as e:
+        error_window = tk.Toplevel(root)
+        error_window.title("Fehler")
+        error_window.geometry("400x200")
+        error_window.resizable(False, False)
+
+        ttk.Label(error_window, text=f"Fehler bei der Installation: {e}", wraplength=350, font=("Arial", 12)).pack(pady=20)
+        ttk.Button(error_window, text="OK", command=error_window.destroy).pack(side="left", padx=10, pady=10)
+        ttk.Button(error_window, text="Als Admin ausführen", command=run_as_admin).pack(side="right", padx=10, pady=10)
+
+def show_completion_page(exe_path):
+    progress_frame.pack_forget()
+    completion_frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+    ttk.Label(completion_frame, text="Installation abgeschlossen!", font=("Arial", 18, "bold")).pack(pady=20)
+    ttk.Label(completion_frame, text="Die Anwendung wurde erfolgreich installiert.", font=("Arial", 14)).pack(pady=10)
+
+    def close_installer():
+        root.destroy()
+
+    def close_and_run():
+        subprocess.Popen([exe_path])
+        root.destroy()
+
+    ttk.Button(completion_frame, text="Installer schließen", command=close_installer).pack(side="left", padx=10, pady=10)
+    ttk.Button(completion_frame, text="Installer schließen und HeitelCursor ausführen", command=close_and_run).pack(side="right", padx=10, pady=10)
+
+def show_install_dir_selection(version):
+    release_frame.pack_forget()
+    install_dir_frame.pack(pady=20, padx=20, fill="both", expand=True)
+
     def set_install_dir():
         selected_dir = filedialog.askdirectory(initialdir=DEFAULT_INSTALL_DIR)
         if selected_dir:
             install_dir_var.set(selected_dir)
 
-    install_dir_window = tk.Toplevel(root)
-    install_dir_window.title("Zielverzeichnis auswählen")
-    install_dir_window.geometry("400x200")
-    install_dir_window.resizable(False, False)
+    def on_ok():
+        install_dir = install_dir_var.get()
+        if install_dir and os.access(install_dir, os.W_OK):
+            show_progress()
+            root.after(100, lambda: install(version, install_dir))
+        else:
+            messagebox.showerror("Fehler", f"Zugriff auf das Verzeichnis {install_dir} verweigert. Bitte wählen Sie ein anderes Verzeichnis.")
 
-    ttk.Label(install_dir_window, text="Wählen Sie das Zielverzeichnis für die Installation:", font=("Arial", 12)).pack(pady=20)
-    install_dir_var = tk.StringVar(value=DEFAULT_INSTALL_DIR)
-    install_dir_combobox = ttk.Combobox(install_dir_window, textvariable=install_dir_var, values=[DEFAULT_INSTALL_DIR], width=50)
-    install_dir_combobox.pack(pady=10)
-    ttk.Button(install_dir_window, text="Durchsuchen", command=set_install_dir).pack(pady=10)
-    ttk.Button(install_dir_window, text="OK", command=install_dir_window.destroy).pack(pady=10)
-
-    install_dir_window.transient(root)
-    install_dir_window.grab_set()
-    root.wait_window(install_dir_window)
-
-    return install_dir_var.get()
+    if not hasattr(show_install_dir_selection, "initialized"):
+        ttk.Label(install_dir_frame, text="Wählen Sie das Zielverzeichnis für die Installation:", font=("Arial", 12)).pack(pady=20)
+        install_dir_var = tk.StringVar(value=DEFAULT_INSTALL_DIR)
+        install_dir_combobox = ttk.Combobox(install_dir_frame, textvariable=install_dir_var, values=[DEFAULT_INSTALL_DIR], width=50)
+        install_dir_combobox.pack(pady=10)
+        ttk.Button(install_dir_frame, text="Durchsuchen", command=set_install_dir).pack(pady=10)
+        ttk.Button(install_dir_frame, text="OK", command=on_ok).pack(pady=10)
+        ttk.Button(install_dir_frame, text="Zurück", command=show_release_selection).pack(pady=10)
+        show_install_dir_selection.initialized = True
 
 def on_install():
     version = version_combobox.get()
-    install_dir = select_install_dir()
-    if install_dir:
-        while not os.access(install_dir, os.W_OK):
-            messagebox.showerror("Fehler", f"Zugriff auf das Verzeichnis {install_dir} verweigert. Bitte wählen Sie ein anderes Verzeichnis.")
-            install_dir = select_install_dir()
-            if not install_dir:
-                return
-        show_progress()
-        root.after(100, lambda: install(version, install_dir))
+    show_install_dir_selection(version)
 
 def show_release_selection():
+    install_dir_frame.pack_forget()
     start_frame.pack_forget()
     release_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
 def show_start_frame():
     release_frame.pack_forget()
+    install_dir_frame.pack_forget()
     start_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
 releases = get_releases()
@@ -155,6 +179,9 @@ install_button.pack(pady=10)
 back_button = ttk.Button(release_frame, text="Zurück", command=show_start_frame)
 back_button.pack(side="left", pady=10, padx=10)
 
+# Zielverzeichnis-Auswahlseite
+install_dir_frame = ttk.Frame(root)
+
 # Fortschrittsanzeige
 progress_frame = ttk.Frame(root)
 progress_label = ttk.Label(progress_frame, text="Installation läuft...", font=("Arial", 14, "bold"))
@@ -163,8 +190,11 @@ progress_bar = ttk.Progressbar(progress_frame, mode='indeterminate')
 progress_bar.pack(pady=10, fill='x', expand=True)
 
 def show_progress():
-    release_frame.pack_forget()
+    install_dir_frame.pack_forget()
     progress_frame.pack(pady=20, padx=20, fill="both", expand=True)
     progress_bar.start()
+
+# Abschlussseite
+completion_frame = ttk.Frame(root)
 
 root.mainloop()
