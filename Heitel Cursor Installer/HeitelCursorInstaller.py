@@ -5,9 +5,10 @@ from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import io
 import subprocess
+import ctypes  # Add this import
 
 GITHUB_API = "https://api.github.com/repos/CreepTV/Heitel-Cursors/releases"
-DEFAULT_INSTALL_DIR = "C:\\Programme"
+DEFAULT_INSTALL_DIR = os.path.join(os.environ['ProgramFiles'], "HeitelCursors")
 
 def get_releases():
     response = requests.get(GITHUB_API)
@@ -43,6 +44,20 @@ def install(version, install_dir):
     if messagebox.askyesno("Installation abgeschlossen", "Möchten Sie Heitel Cursor jetzt ausführen?"):
         subprocess.Popen([exe_path])
 
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def run_as_admin():
+    if not is_admin():
+        if messagebox.askyesno("Administratorrechte erforderlich", "Dieses Programm muss mit Administratorrechten ausgeführt werden. Möchten Sie es als Administrator neu starten?"):
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+            exit()
+
+run_as_admin()
+
 def select_install_dir():
     def set_install_dir():
         selected_dir = filedialog.askdirectory(initialdir=DEFAULT_INSTALL_DIR)
@@ -71,9 +86,11 @@ def on_install():
     version = version_combobox.get()
     install_dir = select_install_dir()
     if install_dir:
-        if not os.access(install_dir, os.W_OK):
-            messagebox.showerror("Fehler", f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
-            return
+        while not os.access(install_dir, os.W_OK):
+            messagebox.showerror("Fehler", f"Zugriff auf das Verzeichnis {install_dir} verweigert. Bitte wählen Sie ein anderes Verzeichnis.")
+            install_dir = select_install_dir()
+            if not install_dir:
+                return
         show_progress()
         root.after(100, lambda: install(version, install_dir))
 
@@ -88,7 +105,7 @@ def show_start_frame():
 releases = get_releases()
 
 root = tk.Tk()
-root.title("Heitel Cursors Installer")
+root.title("Heitel Cursor Installer")
 root.geometry("600x400")
 root.resizable(False, False)  # Fenstergröße nicht veränderbar
 
