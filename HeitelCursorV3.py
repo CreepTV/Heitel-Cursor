@@ -169,23 +169,73 @@ def create_gui():
     button_reset = ctk.CTkButton(cursor_frame, text="Standard-Cursor wiederherstellen", command=reset_cursor)
     button_reset.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
     
-    # Tab für Sound-Einstellungen
-    tab_sound = tab_control.add("Sound")
-    
-    volume_label = ctk.CTkLabel(tab_sound, text="Lautstärke:", font=("Arial", 16))
-    volume_label.pack(pady=10, anchor="w", padx=10)
-    
-    # Ersetze den Standard-Lautstärkeregler durch CTkSlider
-    volume_slider = CTkSlider(tab_sound, from_=0, to=100, command=set_volume)
+    # Tab für Einstellungen
+    tab_settings = tab_control.add("Settings")
+
+    # Vertikale Leiste für Sound und Cursors mit Symbolen
+    settings_frame = ctk.CTkFrame(tab_settings)
+    settings_frame.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=10)
+
+    sidebar_frame = ctk.CTkFrame(settings_frame, width=40, corner_radius=0)  # Dünnere Leiste
+    sidebar_frame.pack(side="left", fill="y")
+    sidebar_frame.pack_propagate(False)
+
+    # Symbole laden
+    sound_image = ctk.CTkImage(Image.open(os.path.join(cursor_dir, "sound_icon.png")), size=(20, 20))  # Pfad anpassen!
+    cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
+
+    sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
+                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame))
+    sound_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
+
+    cursor_button = ctk.CTkButton(sidebar_frame, image=cursor_image, text="", width=30, height=30,  # Größe anpassen
+                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame))
+    cursor_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
+
+    # Frames für Sound- und Cursor-Einstellungen
+    sound_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
+    cursor_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
+
+    def show_settings_tab(value, sound_frame, cursor_frame):
+        if value == "Sound":
+            sound_frame.pack(side="right", fill="both", expand=True)
+            cursor_frame.pack_forget()
+        elif value == "Cursors":
+            cursor_frame.pack(side="right", fill="both", expand=True)
+            sound_frame.pack_forget()
+
+    # Sound Einstellungen
+    volume_label = ctk.CTkLabel(sound_frame, text="Lautstärke", font=("Arial", 16))
+    volume_label.pack(pady=5, anchor="w", padx=10)
+
+    # Lautstärkeregler und Prozentanzeige hinzufügen
+    volume_frame = ctk.CTkFrame(sound_frame, corner_radius=10)
+    volume_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    volume_slider = CTkSlider(volume_frame, from_=0, to=100, command=set_volume)
     volume_slider.set(volume_value * 100)  # Setze die anfängliche Lautstärke auf 50%
-    volume_slider.pack(pady=10, padx=10, anchor="w")
-    
+    volume_slider.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
     # Prozentanzeige hinzufügen
     global volume_percentage_label
-    volume_percentage_label = ctk.CTkLabel(tab_sound, text=f"{int(volume_value * 100)}%", font=("Arial", 12))
-    volume_percentage_label.pack(pady=10, anchor="w", padx=10)
+    volume_percentage_label = ctk.CTkLabel(volume_frame, text=f"{int(volume_value * 100)}%", font=("Arial", 12))
+    volume_percentage_label.pack(side="left", padx=(5, 0))
+
+    # Cursor Einstellungen
+    cursor_label = ctk.CTkLabel(cursor_frame, text="Wähle einen Cursor:", font=("Arial", 16))
+    cursor_label.pack(pady=10, anchor="w", padx=10)
+
+    button_set = ctk.CTkButton(cursor_frame, text="Heitel Cursor setzen", command=set_custom_cursor, fg_color="#cc7000",
+                                 hover_color="#994c00")
+    button_set.pack(pady=5, anchor="w", padx=10)
+
+    button_reset = ctk.CTkButton(cursor_frame, text="Standard-Cursor wiederherstellen", command=reset_cursor)
+    button_reset.pack(pady=5, anchor="w", padx=10)
+
+    # Initiales Anzeigen des Sound-Tabs
+    show_settings_tab("Sound", sound_frame, cursor_frame)
     
-    # Leiste unten für Beenden-Button
+    # Leiste unten
     bottom_frame = ctk.CTkFrame(root, height=40, corner_radius=10)
     bottom_frame.pack(fill="x", side="bottom", padx=10, pady=5)
     
