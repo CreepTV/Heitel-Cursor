@@ -14,13 +14,14 @@ cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "Her
 os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
 image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
-icon_file = os.path.join(cursor_dir, "HeitelCursorsWindowIcon.ico")  # Icon-Datei-Pfad hinzufügen
+icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")  # Gemeinsame Sound-Datei für alle Buttons
 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
 image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.png"
-icon_url = "https://cloud.dxra.de/s/DmESTG6g4ZZpBjK/download/HeitelCursorsWindowIcon.ico"
+icon_url = "https://cloud.dxra.de/s/Z5jqkDqMHB8Ys4P/download/HeitelCursorLogoNew.ico"
+sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
 
 # Dateien herunterladen
@@ -222,15 +223,9 @@ def create_gui():
     volume_percentage_label.pack(side="left", padx=(5, 0))
 
     # Cursor Einstellungen
-    cursor_label = ctk.CTkLabel(cursor_frame, text="Wähle einen Cursor:", font=("Arial", 16))
+    cursor_label = ctk.CTkLabel(cursor_frame, text="Cursors", font=("Arial", 16))
     cursor_label.pack(pady=10, anchor="w", padx=10)
 
-    button_set = ctk.CTkButton(cursor_frame, text="Heitel Cursor setzen", command=set_custom_cursor, fg_color="#cc7000",
-                                 hover_color="#994c00")
-    button_set.pack(pady=5, anchor="w", padx=10)
-
-    button_reset = ctk.CTkButton(cursor_frame, text="Standard-Cursor wiederherstellen", command=reset_cursor)
-    button_reset.pack(pady=5, anchor="w", padx=10)
 
     # Initiales Anzeigen des Sound-Tabs
     show_settings_tab("Sound", sound_frame, cursor_frame)

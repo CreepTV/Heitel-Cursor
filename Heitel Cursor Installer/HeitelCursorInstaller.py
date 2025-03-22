@@ -7,6 +7,7 @@ import io
 import subprocess
 import ctypes  # Add this import
 import sys  # Add this import
+import tempfile  # Add this import
 
 GITHUB_API = "https://api.github.com/repos/CreepTV/Heitel-Cursors/releases"
 DEFAULT_INSTALL_DIR = os.path.join(os.environ['ProgramFiles'], "HeitelCursors")
@@ -132,6 +133,19 @@ root = tk.Tk()
 root.title("Heitel Cursor Installer")
 root.geometry("600x400")
 root.resizable(False, False)  # Fenstergröße nicht veränderbar
+
+# Setzen des Fenster-Icons
+icon_url = "https://cloud.dxra.de/s/q98ifNszWPBbWy6/download/HeitelCursorsInstallerIcon.ico"  # URL zum Icon-Bild
+try:
+    icon_response = requests.get(icon_url, stream=True)
+    icon_response.raise_for_status()
+    icon_data = icon_response.content
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".ico") as icon_file:
+        icon_file.write(icon_data)
+        icon_path = icon_file.name
+    root.iconbitmap(icon_path)
+except Exception as e:
+    print(f"Fehler beim Laden des Icons: {e}")
 
 # Startbildschirm
 start_frame = ttk.Frame(root)
