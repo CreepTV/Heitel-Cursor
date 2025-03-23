@@ -5,9 +5,11 @@ import os
 import urllib.request
 import customtkinter as ctk
 from tkinter import Toplevel, Label, Scale, HORIZONTAL
-from customtkinter import CTkImage, CTkSlider  # CTkSlider importieren
+from customtkinter import CTkImage, CTkSlider, CTkProgressBar  # CTkSlider und CTkProgressBar importieren
 from PIL import Image, ImageTk
 import pygame  # Sound-Abspielfunktion importieren
+import threading
+import tkinter as tk  # Importiere tkinter explizit
 
 # Zielpfad für den Download
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
@@ -20,23 +22,50 @@ sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")  # Gemeinsame 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
 image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.png"
-icon_url = "https://cloud.dxra.de/s/Z5jqkDqMHB8Ys4P/download/HeitelCursorLogoNew.ico"
-sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
+icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
 
+# Globales Variablen für das Bild
+global img
+global image_label
+
 # Dateien herunterladen
-def download_files():
-    try:
-        urllib.request.urlretrieve(cursor_url, cursor_file)
-        print(f"Cursor heruntergeladen nach: {cursor_file}")
-        urllib.request.urlretrieve(image_url, image_file)
-        print(f"Bild heruntergeladen nach: {image_file}")
-        urllib.request.urlretrieve(icon_url, icon_file)
-        print(f"Icon heruntergeladen nach: {icon_file}")
-        urllib.request.urlretrieve(sound_url, sound_file)
-        print(f"Sound heruntergeladen nach: {sound_file}")
-    except Exception as e:
-        print(f"Fehler beim Herunterladen: {e}")
+def download_files(progress_bar, loading_label):
+    files_to_download = {
+        cursor_file: cursor_url,
+        image_file: image_url,
+        icon_file: icon_url,
+        sound_file: sound_url
+    }
+
+    total_files = len(files_to_download)
+    files_downloaded = 0
+
+    for file_path, file_url in files_to_download.items():
+        if not os.path.exists(file_path):
+            try:
+                urllib.request.urlretrieve(file_url, file_path)
+                print(f"{os.path.basename(file_path)} heruntergeladen nach: {file_path}")
+            except Exception as e:
+                print(f"Fehler beim Herunterladen von {os.path.basename(file_path)}: {e}")
+        else:
+            print(f"{os.path.basename(file_path)} ist bereits vorhanden.")
+        
+        files_downloaded += 1
+        progress = files_downloaded / total_files
+        
+        # GUI-Aktualisierungen müssen im Haupt-Thread erfolgen
+        root.after(0, lambda: update_progress(progress_bar, loading_label, progress))
+
+    root.after(0, lambda: finish_download(loading_label))  # Haupt-Thread verwenden
+
+def update_progress(progress_bar, loading_label, progress):
+    progress_bar.set(progress)
+    loading_label.configure(text=f"Lade Dateien herunter... ({int(progress * 100)}%)")
+
+def finish_download(loading_label):
+    loading_label.configure(text="Dateien heruntergeladen!")
+    root.after(1000, show_main_page)  # 1 Sekunde warten, dann zur Hauptseite wechseln
 
 notification_list = []  # Liste, um aktive Benachrichtigungen zu verfolgen
 
@@ -133,19 +162,12 @@ def create_gui():
     ctk.set_appearance_mode("System")  # "Dark", "Light", or "System"
     ctk.set_default_color_theme("blue")
     
-    global root
-    root = ctk.CTk()
-    root.title("Heitel Cursors")
-    root.geometry("400x400")  # Festgelegte Fenstergröße
-    root.resizable(False, False)  # Fenstergröße nicht veränderbar
-    
-    # Setze das Fenster-Icon
-    root.iconbitmap(icon_file)  # Icon für das Fenster setzen
-    
+    global frame
     frame = ctk.CTkFrame(root, corner_radius=10)
     frame.pack(pady=20, padx=20, fill="both", expand=True)
 
     # Bild einfügen
+    global img, image_label
     if (os.path.exists(image_file)):
         img = CTkImage(Image.open(image_file), size=(84, 84))
         image_label = ctk.CTkLabel(frame, image=img, text="")
@@ -236,10 +258,34 @@ def create_gui():
     
     button_exit = ctk.CTkButton(bottom_frame, text="Beenden", command=exit_program, fg_color="red", hover_color="darkred")
     button_exit.pack(pady=5, padx=10, anchor="e")  # Positioniere den Button unten rechts
-    
-    root.mainloop()
+
+def show_loading_page():
+    global root
+    root = ctk.CTk()
+    root.title("Heitel Cursor")
+    root.geometry("400x400")  # Größe des Hauptfensters
+    root.resizable(False, False)  # Fenstergröße nicht veränderbar
+
+    global frame
+    frame = ctk.CTkFrame(root, corner_radius=10)
+    frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+    loading_label = ctk.CTkLabel(frame, text="Lade Dateien herunter...", font=("Arial", 16))
+    loading_label.pack(pady=20)
+
+    progress_bar = CTkProgressBar(frame, width=300)
+    progress_bar.set(0)
+    progress_bar.pack(pady=10)
+
+    # Starten des Downloads in einem separaten Thread
+    download_thread = threading.Thread(target=download_files, args=(progress_bar, loading_label))
+    download_thread.start()
+
+def show_main_page():
+    # Zerstöre die Lade-Widgets und den Frame
+    frame.destroy()
+    create_gui()
 
 if __name__ == "__main__":
-    print("Lade Dateien herunter...")
-    download_files()
-    create_gui()
+    show_loading_page()
+    root.mainloop()  # Verwende root.mainloop() statt ctk.mainloop()
