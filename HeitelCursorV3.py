@@ -17,13 +17,15 @@ os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
 image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
-sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")  # Gemeinsame Sound-Datei für alle Buttons
+sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
+window_file = os.path.join(cursor_dir, "window_icon.png")
 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
 image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.png"
 icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
+window_url = "https://github.com/CreepTV/Heitel-Cursor/blob/main/recources/window_icon.png"
 
 # Globales Variablen für das Bild
 global img
@@ -35,7 +37,9 @@ def download_files(progress_bar, loading_label):
         cursor_file: cursor_url,
         image_file: image_url,
         icon_file: icon_url,
-        sound_file: sound_url
+        sound_file: sound_url,
+        window_file: window_url
+
     }
 
     total_files = len(files_to_download)
@@ -218,35 +222,24 @@ def create_gui():
     cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
 
     sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
-                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame, app_frame))
+                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame))
     sound_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
     cursor_button = ctk.CTkButton(sidebar_frame, image=cursor_image, text="", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame, app_frame))
+                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame))
     cursor_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
-    app_button = ctk.CTkButton(sidebar_frame, text="Anwendung", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("App", sound_frame, cursor_frame, app_frame))
-    app_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
-
-    # Frames für Sound-, Cursor- und Anwendungseinstellungen
+    # Frames für Sound- und Cursor-Einstellungen
     sound_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
     cursor_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
-    app_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
 
-    def show_settings_tab(value, sound_frame, cursor_frame, app_frame):
+    def show_settings_tab(value, sound_frame, cursor_frame):
         if value == "Sound":
             sound_frame.pack(side="right", fill="both", expand=True)
             cursor_frame.pack_forget()
-            app_frame.pack_forget()
         elif value == "Cursors":
             cursor_frame.pack(side="right", fill="both", expand=True)
             sound_frame.pack_forget()
-            app_frame.pack_forget()
-        elif value == "App":
-            app_frame.pack(side="right", fill="both", expand=True)
-            sound_frame.pack_forget()
-            cursor_frame.pack_forget()
 
     # Sound Einstellungen
     volume_label = ctk.CTkLabel(sound_frame, text="Lautstärke", font=("Arial", 16))
@@ -300,12 +293,8 @@ def create_gui():
     button_reset_size = ctk.CTkButton(cursor_frame, text="Standardgröße zurücksetzen", command=reset_to_standard_size)
     button_reset_size.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
 
-    # Anwendung Einstellungen
-    app_label = ctk.CTkLabel(app_frame, text="Anwendungseinstellungen", font=("Arial", 16))
-    app_label.pack(pady=10, anchor="w", padx=10)
-
     # Initiales Anzeigen des Sound-Tabs
-    show_settings_tab("Sound", sound_frame, cursor_frame, app_frame)
+    show_settings_tab("Sound", sound_frame, cursor_frame)
     
     # Leiste unten
     bottom_frame = ctk.CTkFrame(root, height=40, corner_radius=10)
