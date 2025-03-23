@@ -103,13 +103,12 @@ def set_custom_cursor_with_size(size):
     cursor = ctypes.windll.user32.LoadImageW(0, cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
     if cursor:
         ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW
-        show_notification(f"Heitel Cursor wurde auf {size}px gesetzt!")
         play_sound()
     else:
         show_notification("Fehler beim Laden des Cursors")
         play_sound()
 
-# Setzt den Standard-Cursor zurück
+    # Setzt den Standard-Cursor zurück
 def reset_cursor():
     ctypes.windll.user32.SystemParametersInfoW(87, 0, None, 0)
     show_notification("Standard-Cursor wiederhergestellt!")
@@ -219,24 +218,35 @@ def create_gui():
     cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
 
     sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
-                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame))
+                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame, app_frame))
     sound_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
     cursor_button = ctk.CTkButton(sidebar_frame, image=cursor_image, text="", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame))
+                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame, app_frame))
     cursor_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
-    # Frames für Sound- und Cursor-Einstellungen
+    app_button = ctk.CTkButton(sidebar_frame, text="Anwendung", width=30, height=30,  # Größe anpassen
+                                    command=lambda: show_settings_tab("App", sound_frame, cursor_frame, app_frame))
+    app_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
+
+    # Frames für Sound-, Cursor- und Anwendungseinstellungen
     sound_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
     cursor_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
+    app_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
 
-    def show_settings_tab(value, sound_frame, cursor_frame):
+    def show_settings_tab(value, sound_frame, cursor_frame, app_frame):
         if value == "Sound":
             sound_frame.pack(side="right", fill="both", expand=True)
             cursor_frame.pack_forget()
+            app_frame.pack_forget()
         elif value == "Cursors":
             cursor_frame.pack(side="right", fill="both", expand=True)
             sound_frame.pack_forget()
+            app_frame.pack_forget()
+        elif value == "App":
+            app_frame.pack(side="right", fill="both", expand=True)
+            sound_frame.pack_forget()
+            cursor_frame.pack_forget()
 
     # Sound Einstellungen
     volume_label = ctk.CTkLabel(sound_frame, text="Lautstärke", font=("Arial", 16))
@@ -253,34 +263,49 @@ def create_gui():
     # Prozentanzeige hinzufügen
     global volume_percentage_label
     volume_percentage_label = ctk.CTkLabel(volume_frame, text=f"{int(volume_value * 100)}%", font=("Arial", 12))
-    volume_percentage_label.pack(side="left", padx=(5, 0))
+    volume_percentage_label.pack(side="left", padx=(5, 10))
 
     # Cursor Einstellungen
     cursor_label = ctk.CTkLabel(cursor_frame, text="Cursors", font=("Arial", 16))
-    cursor_label.pack(pady=10, anchor="w", padx=10)
+    cursor_label.pack(pady=(0, 0), anchor="w", padx=10)  # Padding unten hinzufügen
+
     # Cursor Größe Einstellungen
     cursor_size_label = ctk.CTkLabel(cursor_frame, text="Cursor Größe:", font=("Arial", 11))
-    cursor_size_label.pack(pady=10, anchor="w", padx=10)
+    cursor_size_label.pack(pady=(0, 5), anchor="w", padx=10)  # Padding unten hinzufügen
 
     cursor_size_frame = ctk.CTkFrame(cursor_frame, corner_radius=10)
     cursor_size_frame.pack(pady=5, padx=10, fill="x", anchor="w")
 
     cursor_size_slider = CTkSlider(cursor_size_frame, from_=16, to=128, orientation=HORIZONTAL)
-    cursor_size_slider.set(32)  # Setze die anfängliche Größe auf 32
-    cursor_size_slider.pack(side="left", fill="x", expand=True, padx=(0, 5))
+    cursor_size_slider.set(85)  # Setze die anfängliche Größe auf 85
+    cursor_size_slider.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
-    cursor_size_value_label = ctk.CTkLabel(cursor_size_frame, text="32", font=("Arial", 12))
-    cursor_size_value_label.pack(side="left", padx=(5, 0))
+    cursor_size_value_label = ctk.CTkLabel(cursor_size_frame, text="85", font=("Arial", 12))
+    cursor_size_value_label.pack(side="left", padx=(5, 10))
 
     def update_cursor_size(size):
         size = int(size)
         cursor_size_value_label.configure(text=str(size))
+        set_custom_cursor_with_size(size)  # Aktualisiere die Cursorgröße
 
     cursor_size_slider.configure(command=update_cursor_size)
-    update_cursor_size(32)  # Initiale Größe
+    update_cursor_size(85)  # Initiale Größe
+
+    # Knopf zum Zurücksetzen der Größe auf 86
+    def reset_to_standard_size():
+        cursor_size_slider.set(86)
+        cursor_size_value_label.configure(text="86")
+        set_custom_cursor_with_size(86)  # Aktualisiere die Cursorgröße
+
+    button_reset_size = ctk.CTkButton(cursor_frame, text="Standardgröße zurücksetzen", command=reset_to_standard_size)
+    button_reset_size.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
+
+    # Anwendung Einstellungen
+    app_label = ctk.CTkLabel(app_frame, text="Anwendungseinstellungen", font=("Arial", 16))
+    app_label.pack(pady=10, anchor="w", padx=10)
 
     # Initiales Anzeigen des Sound-Tabs
-    show_settings_tab("Sound", sound_frame, cursor_frame)
+    show_settings_tab("Sound", sound_frame, cursor_frame, app_frame)
     
     # Leiste unten
     bottom_frame = ctk.CTkFrame(root, height=40, corner_radius=10)
@@ -293,7 +318,7 @@ def show_loading_page():
     global root
     root = ctk.CTk()
     root.title("Heitel Cursor")
-    root.geometry("400x400")  # Größe des Hauptfensters
+    root.geometry("430x510")  # Größe des Hauptfensters um 20% vergrößern
     root.resizable(False, False)  # Fenstergröße nicht veränderbar
 
     # Icon setzen
