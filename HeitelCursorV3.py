@@ -42,7 +42,7 @@ def download_files(progress_bar, loading_label):
     files_downloaded = 0
 
     for file_path, file_url in files_to_download.items():
-        if not os.path.exists(file_path):
+        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
             try:
                 urllib.request.urlretrieve(file_url, file_path)
                 print(f"{os.path.basename(file_path)} heruntergeladen nach: {file_path}")
@@ -93,6 +93,17 @@ def set_custom_cursor():
     if cursor:
         ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW
         show_notification("Heitel Cursor wurde gesetzt!")
+        play_sound()
+    else:
+        show_notification("Fehler beim Laden des Cursors")
+        play_sound()
+
+# Lade eine benutzerdefinierte Cursor-Datei mit angepasster Größe
+def set_custom_cursor_with_size(size):
+    cursor = ctypes.windll.user32.LoadImageW(0, cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
+    if cursor:
+        ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW
+        show_notification(f"Heitel Cursor wurde auf {size}px gesetzt!")
         play_sound()
     else:
         show_notification("Fehler beim Laden des Cursors")
@@ -186,7 +197,7 @@ def create_gui():
     label = ctk.CTkLabel(cursor_frame, text="Wähle einen Cursor:", font=("Arial", 16))
     label.pack(pady=10, anchor="w", padx=10)  # Linken Abstand hinzufügen
     
-    button_set = ctk.CTkButton(cursor_frame, text="Heitel Cursor setzen", command=set_custom_cursor, fg_color="#cc7000", hover_color="#994c00")
+    button_set = ctk.CTkButton(cursor_frame, text="Heitel Cursor setzen", command=lambda: set_custom_cursor_with_size(int(cursor_size_slider.get())), fg_color="#cc7000", hover_color="#994c00")
     button_set.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
     
     button_reset = ctk.CTkButton(cursor_frame, text="Standard-Cursor wiederherstellen", command=reset_cursor)
@@ -247,7 +258,26 @@ def create_gui():
     # Cursor Einstellungen
     cursor_label = ctk.CTkLabel(cursor_frame, text="Cursors", font=("Arial", 16))
     cursor_label.pack(pady=10, anchor="w", padx=10)
+    # Cursor Größe Einstellungen
+    cursor_size_label = ctk.CTkLabel(cursor_frame, text="Cursor Größe:", font=("Arial", 11))
+    cursor_size_label.pack(pady=10, anchor="w", padx=10)
 
+    cursor_size_frame = ctk.CTkFrame(cursor_frame, corner_radius=10)
+    cursor_size_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    cursor_size_slider = CTkSlider(cursor_size_frame, from_=16, to=128, orientation=HORIZONTAL)
+    cursor_size_slider.set(32)  # Setze die anfängliche Größe auf 32
+    cursor_size_slider.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+    cursor_size_value_label = ctk.CTkLabel(cursor_size_frame, text="32", font=("Arial", 12))
+    cursor_size_value_label.pack(side="left", padx=(5, 0))
+
+    def update_cursor_size(size):
+        size = int(size)
+        cursor_size_value_label.configure(text=str(size))
+
+    cursor_size_slider.configure(command=update_cursor_size)
+    update_cursor_size(32)  # Initiale Größe
 
     # Initiales Anzeigen des Sound-Tabs
     show_settings_tab("Sound", sound_frame, cursor_frame)
@@ -265,6 +295,10 @@ def show_loading_page():
     root.title("Heitel Cursor")
     root.geometry("400x400")  # Größe des Hauptfensters
     root.resizable(False, False)  # Fenstergröße nicht veränderbar
+
+    # Icon setzen
+    if os.path.exists(icon_file):
+        root.iconbitmap(icon_file)
 
     global frame
     frame = ctk.CTkFrame(root, corner_radius=10)
