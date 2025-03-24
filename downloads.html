@@ -6,7 +6,7 @@
     <meta name="description" content="Heitel Cursor Projekt - Die ultimative Lösung für individuelle Cursorsteuerung">
     <meta name="keywords" content="Heitel Cursor, Cursorsteuerung, individuelle Cursor, Software">
     <meta name="author" content="Creep Media">
-    <link rel="icon" href="Heitel Cursor Site\data\HeitelCursors.ico" type="image/x-icon">
+    <link rel="icon" href="Heitel Cursor Site\data\HeitelCursor.ico" type="image/x-icon">
     <title>Heitel Cursor Projekt - Downloads</title>
     <link rel="stylesheet" href="Heitel Cursor Site\style.css">
     <script>
@@ -72,13 +72,25 @@
         .download-button:hover {
             background-color: #9b6bdb;
         }
+        #release-dropdown {
+            padding: 10px;
+            margin-right: 10px;
+            background-color: #333;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        #release-dropdown option {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header>
         <a href="index.html">
-            <img src="Heitel Cursor Site\data\HeitelCursors.ico" alt="Heitel Cursor Logo">
+            <img src="Heitel Cursor Site\data\HeitelCursor.ico" alt="Heitel Cursor Logo">
         </a>
         <h1>Heitel Cursor Projekt</h1>
         <p>Die ultimative Lösung für individuelle Cursorsteuerung</p>
@@ -95,9 +107,16 @@
     <main>
         <div class="container">
             <h2>Downloads</h2>
+            <div class="release">
+                <img src="Heitel Cursor Site\data\HeitelCursorsInstallerIcon.ico" alt="Heitel Cursor Bild" style="width: 90px; height: auto; border-radius: 10px; margin-bottom: 5px;">
+                <h3 style="margin-top: 0px; margin-bottom: 10px;">HeitelCursor Installer</h3>
+                <p style="margin-top: 0px;">Sie können den HeitelCursor Installer direkt hier herunterladen:</p>
+                <a href="https://github.com/CreepTV/Heitel-Cursor/releases/latest/download/HeitelCursorInstaller.exe" class="download-button">Download HeitelCursor Installer</a>
+            </div>
+            <h2>Alternative (.exe)</h2>
             <p>Hier können Sie verschiedene Versionen der Heitel Cursor Anwendung herunterladen:</p>
             <div>
-                <select id="release-dropdown" style="padding: 10px; margin-right: 10px;" onchange="showReleaseInfo()">
+                <select id="release-dropdown" onchange="showReleaseInfo()">
                     <option value="">Wählen Sie eine Version</option>
                 </select>
             </div>
