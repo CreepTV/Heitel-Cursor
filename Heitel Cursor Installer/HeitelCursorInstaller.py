@@ -152,7 +152,7 @@ start_frame = ttk.Frame(root)
 start_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
 # Bannerbild von einem Link laden
-banner_image_url = "https://github.com/CreepTV/Heitel-Cursors/blob/main/Heitel%20Cursor%20Installer/heitelinstallerbanner.jpg?raw=true"  # URL zum Bannerbild
+banner_image_url = "https://github.com/CreepTV/Heitel-Cursors/blob/main/Heitel%20Cursor%20Installer/heitelinstallerbanner.png?raw=true"  # URL zum Bannerbild
 try:
     banner_image_response = requests.get(banner_image_url, stream=True)
     banner_image_response.raise_for_status()
