@@ -6,7 +6,7 @@ import urllib.request
 import customtkinter as ctk
 from tkinter import Toplevel, Label, Scale, HORIZONTAL
 from customtkinter import CTkImage, CTkSlider, CTkProgressBar  # CTkSlider und CTkProgressBar importieren
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, UnidentifiedImageError
 import pygame  # Sound-Abspielfunktion importieren
 import threading
 import tkinter as tk  # Importiere tkinter explizit
@@ -15,7 +15,7 @@ import tkinter as tk  # Importiere tkinter explizit
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
 os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
-image_file = os.path.join(cursor_dir, "HeitelCursorLogo.png")
+image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
 window_file = os.path.join(cursor_dir, "window_icon.png")
@@ -39,7 +39,6 @@ def download_files(progress_bar, loading_label):
         icon_file: icon_url,
         sound_file: sound_url,
         window_file: window_url
-
     }
 
     total_files = len(files_to_download)
@@ -112,7 +111,7 @@ def set_custom_cursor_with_size(size):
         show_notification("Fehler beim Laden des Cursors")
         play_sound()
 
-    # Setzt den Standard-Cursor zurück
+# Setzt den Standard-Cursor zurück
 def reset_cursor():
     ctypes.windll.user32.SystemParametersInfoW(87, 0, None, 0)
     show_notification("Standard-Cursor wiederhergestellt!")
@@ -135,13 +134,16 @@ def show_notification(message):
     content_frame.pack()
 
     # Bild hinzufügen
-    if os.path.exists(image_file):
-        img = Image.open(image_file)
-        img = img.resize((32, 32))  # Größe des Bildes anpassen
-        photo = ImageTk.PhotoImage(img)
-        image_label = Label(content_frame, image=photo, bg='black')
-        image_label.image = photo  # Referenz speichern
-        image_label.pack(side='left', padx=5)
+    try:
+        if os.path.exists(image_file):
+            img = Image.open(image_file)
+            img = img.resize((32, 32))  # Größe des Bildes anpassen
+            photo = ImageTk.PhotoImage(img)
+            image_label = Label(content_frame, image=photo, bg='black')
+            image_label.image = photo  # Referenz speichern
+            image_label.pack(side='left', padx=5)
+    except (FileNotFoundError, UnidentifiedImageError) as e:
+        print(f"Fehler beim Laden des Bildes: {e}")
 
     label = Label(content_frame, text=message, bg="black", fg="white", padx=10, pady=5, font=("Arial", 12))
     label.pack(side='left')
@@ -182,10 +184,13 @@ def create_gui():
 
     # Bild einfügen
     global img, image_label
-    if (os.path.exists(image_file)):
-        img = CTkImage(Image.open(image_file), size=(84, 84))
-        image_label = ctk.CTkLabel(frame, image=img, text="")
-        image_label.pack(anchor="ne", padx=10, pady=5)
+    try:
+        if os.path.exists(image_file):
+            img = CTkImage(Image.open(image_file), size=(84, 84))
+            image_label = ctk.CTkLabel(frame, image=img, text="")
+            image_label.pack(anchor="ne", padx=10, pady=5)
+    except (FileNotFoundError, UnidentifiedImageError) as e:
+        print(f"Fehler beim Laden des Bildes: {e}")
     
     # Tab-Steuerung hinzufügen
     tab_control = ctk.CTkTabview(frame)
@@ -218,8 +223,13 @@ def create_gui():
     sidebar_frame.pack_propagate(False)
 
     # Symbole laden
-    sound_image = ctk.CTkImage(Image.open(os.path.join(cursor_dir, "sound_icon.png")), size=(20, 20))  # Pfad anpassen!
-    cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
+    try:
+        sound_image = ctk.CTkImage(Image.open(os.path.join(cursor_dir, "sound_icon.png")), size=(20, 20))  # Pfad anpassen!
+        cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
+    except (FileNotFoundError, UnidentifiedImageError) as e:
+        print(f"Fehler beim Laden der Symbole: {e}")
+        sound_image = None
+        cursor_image = None
 
     sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
                                    command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame))
