@@ -15,7 +15,7 @@ import tkinter as tk  # Importiere tkinter explizit
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
 os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
-image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
+image_file = os.path.join(cursor_dir, "HeitelCursorLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
 window_file = os.path.join(cursor_dir, "window_icon.png")
