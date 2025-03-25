@@ -19,6 +19,9 @@ image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
 window_file = os.path.join(cursor_dir, "window_icon.png")
+sound_icon_file = os.path.join(cursor_dir, "sound_icon.png")
+cursor_icon_file = os.path.join(cursor_dir, "cursor_icon.png")
+window_icon_file = os.path.join(cursor_dir, "windowsymbol_icon.png")
 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
@@ -26,6 +29,9 @@ image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.
 icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
 window_url = "https://github.com/CreepTV/Heitel-Cursor/blob/main/recources/window_icon.png"
+sound_icon_url = "https://cloud.dxra.de/s/tkLdMagazPr7LJS/download/sound_icon.png"
+cursor_icon_url = "https://cloud.dxra.de/s/fSBCty8DwH9tSdq/download/cursor_icon.png"
+window_icon_url = "https://cloud.dxra.de/s/QzN3pR5L4qbdxHC/download/windowsymbol_icon.png"
 
 # Globales Variablen für das Bild
 global img
@@ -38,14 +44,19 @@ def download_files(progress_bar, loading_label):
         image_file: image_url,
         icon_file: icon_url,
         sound_file: sound_url,
-        window_file: window_url
+        window_file: window_url,
+        sound_icon_file: sound_icon_url,
+        cursor_icon_file: cursor_icon_url,
+        window_icon_file: window_icon_url
     }
 
     total_files = len(files_to_download)
     files_downloaded = 0
+    files_already_present = True
 
     for file_path, file_url in files_to_download.items():
         if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+            files_already_present = False
             try:
                 urllib.request.urlretrieve(file_url, file_path)
                 print(f"{os.path.basename(file_path)} heruntergeladen nach: {file_path}")
@@ -58,16 +69,19 @@ def download_files(progress_bar, loading_label):
         progress = files_downloaded / total_files
         
         # GUI-Aktualisierungen müssen im Haupt-Thread erfolgen
-        root.after(0, lambda: update_progress(progress_bar, loading_label, progress))
+        root.after(0, lambda: update_progress(progress_bar, loading_label, progress, files_already_present))
 
     root.after(0, lambda: finish_download(loading_label))  # Haupt-Thread verwenden
 
-def update_progress(progress_bar, loading_label, progress):
+def update_progress(progress_bar, loading_label, progress, files_already_present):
     progress_bar.set(progress)
-    loading_label.configure(text=f"Lade Dateien herunter... ({int(progress * 100)}%)")
+    if files_already_present:
+        loading_label.configure(text=f"Lade Dateien... ({int(progress * 100)}%)")
+    else:
+        loading_label.configure(text=f"Lade Dateien herunter... ({int(progress * 100)}%)")
 
 def finish_download(loading_label):
-    loading_label.configure(text="Dateien heruntergeladen!")
+    loading_label.configure(text="Dateien geladen!")
     root.after(1000, show_main_page)  # 1 Sekunde warten, dann zur Hauptseite wechseln
 
 notification_list = []  # Liste, um aktive Benachrichtigungen zu verfolgen
@@ -173,6 +187,29 @@ def show_notification(message):
 
     notification.after(2000, remove_notification)
 
+def set_appearance_mode(mode):
+    ctk.set_appearance_mode(mode)
+    update_appearance_buttons(mode)
+
+def update_appearance_buttons(active_mode):
+    modes = ["Dark", "Light", "System"]
+    buttons = [dark_mode_button, light_mode_button, system_mode_button]
+    for mode, button in zip(modes, buttons):
+        if mode == active_mode:
+            if mode == "Dark":
+                button.configure(fg_color="gray")
+            elif mode == "Light":
+                button.configure(fg_color="gray")
+            elif mode == "System":
+                button.configure(fg_color="lightgray")
+        else:
+            if mode == "Dark":
+                button.configure(fg_color="darkgray")
+            elif mode == "Light":
+                button.configure(fg_color="white")
+            elif mode == "System":
+                button.configure(fg_color="gray")
+
 # GUI erstellen
 def create_gui():
     ctk.set_appearance_mode("System")  # "Dark", "Light", or "System"
@@ -224,32 +261,45 @@ def create_gui():
 
     # Symbole laden
     try:
-        sound_image = ctk.CTkImage(Image.open(os.path.join(cursor_dir, "sound_icon.png")), size=(20, 20))  # Pfad anpassen!
-        cursor_image = ctk.CTkImage(Image.open(image_file), size=(20, 20))  # Pfad anpassen!
+        sound_image = CTkImage(Image.open(sound_icon_file), size=(20, 20))
+        cursor_image = CTkImage(Image.open(cursor_icon_file), size=(20, 20))
+        window_image = CTkImage(Image.open(window_icon_file), size=(20, 20))
     except (FileNotFoundError, UnidentifiedImageError) as e:
         print(f"Fehler beim Laden der Symbole: {e}")
         sound_image = None
         cursor_image = None
+        window_image = None
 
     sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
-                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame))
+                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame, window_frame))
     sound_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
     cursor_button = ctk.CTkButton(sidebar_frame, image=cursor_image, text="", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame))
+                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame, window_frame))
     cursor_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
-    # Frames für Sound- und Cursor-Einstellungen
+    window_button = ctk.CTkButton(sidebar_frame, image=window_image, text="", width=30, height=30,  # Größe anpassen
+                                    command=lambda: show_settings_tab("Window", sound_frame, cursor_frame, window_frame))
+    window_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
+
+    # Frames für Sound-, Cursor- und Fenster-Einstellungen
     sound_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
     cursor_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
+    window_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
 
-    def show_settings_tab(value, sound_frame, cursor_frame):
+    def show_settings_tab(value, sound_frame, cursor_frame, window_frame):
         if value == "Sound":
             sound_frame.pack(side="right", fill="both", expand=True)
             cursor_frame.pack_forget()
+            window_frame.pack_forget()
         elif value == "Cursors":
             cursor_frame.pack(side="right", fill="both", expand=True)
             sound_frame.pack_forget()
+            window_frame.pack_forget()
+        elif value == "Window":
+            window_frame.pack(side="right", fill="both", expand=True)
+            sound_frame.pack_forget()
+            cursor_frame.pack_forget()
 
     # Sound Einstellungen
     volume_label = ctk.CTkLabel(sound_frame, text="Lautstärke", font=("Arial", 16))
@@ -303,8 +353,35 @@ def create_gui():
     button_reset_size = ctk.CTkButton(cursor_frame, text="Standardgröße zurücksetzen", command=reset_to_standard_size)
     button_reset_size.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
 
+    # Fenster Einstellungen
+    window_label = ctk.CTkLabel(window_frame, text="Anwendung", font=("Arial", 16))
+    window_label.pack(pady=5, anchor="w", padx=10)
+
+    # Farbschema Einstellungen
+    appearance_label = ctk.CTkLabel(window_frame, text="Farbschema:", font=("Arial", 11))
+    appearance_label.pack(pady=(10, 5), anchor="w", padx=10)
+
+    appearance_frame = ctk.CTkFrame(window_frame, corner_radius=10)
+    appearance_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    global dark_mode_button, light_mode_button, system_mode_button
+
+    dark_mode_button = ctk.CTkButton(appearance_frame, text="Dunkel", command=lambda: set_appearance_mode("Dark"), width=40, height=20)
+    dark_mode_button.pack(side="left", padx=5, pady=5)
+
+    light_mode_button = ctk.CTkButton(appearance_frame, text="Hell", command=lambda: set_appearance_mode("Light"), width=40, height=20)
+    light_mode_button.pack(side="left", padx=5, pady=5)
+
+    system_mode_button = ctk.CTkButton(appearance_frame, text="System", command=lambda: set_appearance_mode("System"), width=40, height=20)
+    system_mode_button.pack(side="left", padx=5, pady=5)
+
+    # Set initial appearance mode
+    update_appearance_buttons("System")
+
+    # Weitere Fenster-Einstellungen hier hinzufügen
+
     # Initiales Anzeigen des Sound-Tabs
-    show_settings_tab("Sound", sound_frame, cursor_frame)
+    show_settings_tab("Sound", sound_frame, cursor_frame, window_frame)
     
     # Leiste unten
     bottom_frame = ctk.CTkFrame(root, height=40, corner_radius=10)
