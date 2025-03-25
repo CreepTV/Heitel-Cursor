@@ -84,6 +84,11 @@
             background-color: #1e1e1e;
             color: #ffffff;
         }
+        .sticky {
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
@@ -95,7 +100,7 @@
         <h1>Heitel Cursor Projekt</h1>
         <p>Die ultimative Lösung für individuelle Cursorsteuerung</p>
     </header>
-    <nav>
+    <nav id="navbar" style="width: max-content; border-radius: 10px; margin-top: -17px;">
         <a href="index.html#über">Über die Software</a>
         <a href="index.html#funktionen">Funktionen</a>
         <a href="downloads.html">Download</a>
@@ -137,5 +142,26 @@
             <a href="index.html#weblinks" style="color: #bbbbbb; margin: 0 10px;">Weblinks</a>
         </nav-footer>
     </footer>
+    <script>
+        window.onscroll = function() {makeNavbarSticky()};
+
+        var navbar = document.getElementById("navbar");
+        var sticky = navbar.offsetTop;
+
+        function makeNavbarSticky() {
+            if (window.pageYOffset >= sticky) {
+                navbar.classList.add("sticky");
+                navbar.style.marginTop = "10px";
+                navbar.style.height = "30px";
+                navbar.style.textAlign = "center";
+                navbar.style.display = "flex";
+                navbar.style.alignItems = "center";
+            } else {
+                navbar.classList.remove("sticky");
+                navbar.style.marginTop = "-17px";
+                navbar.style.height = "max-content";
+            }
+        }
+    </script>
 </body>
 </html>

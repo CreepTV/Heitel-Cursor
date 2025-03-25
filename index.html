@@ -18,7 +18,7 @@
         <h1>Heitel Cursor Projekt</h1>
         <p>Die ultimative Lösung für individuelle Cursorsteuerung</p>
     </header>
-    <nav style="width: max-content; border-radius: 10px; margin-top: -17px;">
+    <nav id="navbar" style="width: max-content; border-radius: 10px; margin-top: -17px;">
         <a href="#über">Über die Software</a>
         <a href="#funktionen">Funktionen</a>
         <a href="downloads.html">Download</a>
@@ -102,7 +102,9 @@ npm install
     <footer style="background-color: #1e1e1e; color: #bbbbbb; text-align: center; border-top: 1px solid #444; width: 100%; margin-top: 30px;"></footer>
         <p style="margin-bottom: 5px;">&copy; 2025 Heitel Cursor Projekt. Alle Rechte vorbehalten.</p>
         <p>Entwickelt von <a href="https://creepstudio.framer.media/de/creepmedia" style="color: #d786fc;">Creep Media</a></p>
-        <img src="data\Creep MediaLogo.png" alt="Creep Media Logo" style="width: 100px; height: auto; margin-top: -10px; margin-bottom: 20px;">
+        <img src="Heitel Cursor Site\data\Creep MediaLogo.png" alt="Creep Media Logo" style="width: 100px; height: auto; margin-top: -10px; margin-bottom: 10px;">
+        <p>Mit Unterstützung durch <a href="https://dxra.de">DXRA</a></p>
+        <img src="Heitel Cursor Site\data\DXRA_Logo.png" alt="Support Logo" style="width: 60px; height: auto; margin-top: -10px; margin-bottom: 20px;">
         <nav-footer>
             <a href="#über" style="color: #bbbbbb; margin: 0 10px;">Über die Software</a>
             <a href="#funktionen" style="color: #bbbbbb; margin: 0 10px;">Funktionen</a>
@@ -113,5 +115,33 @@ npm install
             <a href="#weblinks" style="color: #bbbbbb; margin: 0 10px;">Weblinks</a>
         </nav-footer>
     </footer>
+    <script>
+        window.onscroll = function() {makeNavbarSticky()};
+
+        var navbar = document.getElementById("navbar");
+        var sticky = navbar.offsetTop;
+
+        function makeNavbarSticky() {
+            if (window.pageYOffset >= sticky) {
+                navbar.classList.add("sticky");
+                navbar.style.marginTop = "10px";
+                navbar.style.height = "30px";
+                navbar.style.textAlign = "center";
+                navbar.style.display = "flex";
+                navbar.style.alignItems = "center";
+            } else {
+                navbar.classList.remove("sticky");
+                navbar.style.marginTop = "-17px";
+                navbar.style.height = "max-content";
+            }
+        }
+    </script>
+    <style>
+        .sticky {
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+    </style>
 </body>
 </html>
