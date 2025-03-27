@@ -19,6 +19,7 @@
         <p>Die ultimative Lösung für individuelle Cursorsteuerung</p>
     </header>
     <nav id="navbar" style="width: max-content; border-radius: 10px; margin-top: -17px;">
+        <img id="sticky-logo" src="Heitel Cursor Site\data\HeitelCursor.ico" alt="Heitel Cursor Logo" style="display: none; width: 50px; height: auto; margin: 0 20px;">
         <a href="#über">Über die Software</a>
         <a href="#funktionen">Funktionen</a>
         <a href="downloads.html">Download</a>
@@ -116,10 +117,11 @@ npm install
         </nav-footer>
     </footer>
     <script>
-        window.onscroll = function() {makeNavbarSticky()};
+        window.onscroll = function() { makeNavbarSticky(); };
 
         var navbar = document.getElementById("navbar");
-        var sticky = navbar.offsetTop;
+        var stickyLogo = document.getElementById("sticky-logo");
+        var sticky = navbar.offsetTop - 10; // Adjusted to trigger stickiness at 10px from the top
 
         function makeNavbarSticky() {
             if (window.pageYOffset >= sticky) {
@@ -129,19 +131,14 @@ npm install
                 navbar.style.textAlign = "center";
                 navbar.style.display = "flex";
                 navbar.style.alignItems = "center";
+                stickyLogo.style.display = "block";
             } else {
                 navbar.classList.remove("sticky");
                 navbar.style.marginTop = "-17px";
                 navbar.style.height = "max-content";
+                stickyLogo.style.display = "none";
             }
         }
     </script>
-    <style>
-        .sticky {
-            position: fixed;
-            top: 0;
-            width: 100%;
-        }
-    </style>
 </body>
 </html>

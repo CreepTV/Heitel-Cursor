@@ -117,3 +117,9 @@ ul {
     background-color: #1e1e1e;
     color: #ffffff;
 }
+
+.sticky {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
