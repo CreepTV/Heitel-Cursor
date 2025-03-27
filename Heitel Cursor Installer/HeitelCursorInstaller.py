@@ -9,6 +9,11 @@ import ctypes  # Add this import
 import sys  # Add this import
 import tempfile  # Add this import
 
+# Prüfen, ob das Programm mit Administratorrechten ausgeführt wird
+if not ctypes.windll.shell32.IsUserAnAdmin():
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+    sys.exit()
+
 GITHUB_API = "https://api.github.com/repos/CreepTV/Heitel-Cursors/releases"
 DEFAULT_INSTALL_DIR = os.path.join(os.environ['ProgramFiles'], "HeitelCursors")
 
@@ -38,9 +43,25 @@ def run_as_admin():
 
 def install(version, install_dir):
     try:
+        # Versuche, das Verzeichnis zu erstellen
+        if not os.path.exists(install_dir):
+            try:
+                os.makedirs(install_dir, exist_ok=True)
+            except PermissionError:
+                if not is_admin():
+                    messagebox.showinfo(
+                        "Administratorrechte erforderlich",
+                        "Das Programm benötigt Administratorrechte, um das Verzeichnis zu erstellen."
+                    )
+                    run_as_admin()
+                else:
+                    raise PermissionError(f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
+
+        # Prüfe Schreibrechte
         if not os.access(install_dir, os.W_OK):
-            run_as_admin()
-        
+            raise PermissionError(f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
+
+        # Lade die gewünschte Version herunter
         if version == "Neueste Version":
             response = requests.get(f"{GITHUB_API}/latest")
             response.raise_for_status()
@@ -59,6 +80,8 @@ def install(version, install_dir):
 
         download_file(exe_url, exe_path)
         show_completion_page(exe_path)
+    except PermissionError as e:
+        messagebox.showerror("Fehler", f"{e}\nBitte wählen Sie ein anderes Verzeichnis oder führen Sie das Programm als Administrator aus.")
     except Exception as e:
         error_window = tk.Toplevel(root)
         error_window.title("Fehler")
@@ -97,11 +120,21 @@ def show_install_dir_selection(version):
 
     def on_ok():
         install_dir = install_dir_var.get()
-        if install_dir and os.access(install_dir, os.W_OK):
+        try:
+            # Check if the directory is writable
+            if not os.access(install_dir, os.W_OK):
+                raise PermissionError(f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
             show_progress()
             root.after(100, lambda: install(version, install_dir))
-        else:
-            messagebox.showerror("Fehler", f"Zugriff auf das Verzeichnis {install_dir} verweigert. Bitte wählen Sie ein anderes Verzeichnis.")
+        except PermissionError as e:
+            fallback_dir = os.path.join(os.environ['TEMP'], "HeitelCursors")
+            messagebox.showwarning(
+                "Warnung",
+                f"{e}\nDas Programm wird versuchen, stattdessen in das Verzeichnis {fallback_dir} zu installieren."
+            )
+            install_dir_var.set(fallback_dir)
+            show_progress()
+            root.after(100, lambda: install(version, fallback_dir))
 
     if not hasattr(show_install_dir_selection, "initialized"):
         ttk.Label(install_dir_frame, text="Wählen Sie das Zielverzeichnis für die Installation:", font=("Arial", 12)).pack(pady=20)
