@@ -11,7 +11,9 @@ import tempfile  # Add this import
 
 # Prüfen, ob das Programm mit Administratorrechten ausgeführt wird
 if not ctypes.windll.shell32.IsUserAnAdmin():
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+    # Relaunch the script with admin privileges
+    params = " ".join([f'"{arg}"' for arg in sys.argv])
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
     sys.exit()
 
 GITHUB_API = "https://api.github.com/repos/CreepTV/Heitel-Cursors/releases"
@@ -45,17 +47,7 @@ def install(version, install_dir):
     try:
         # Versuche, das Verzeichnis zu erstellen
         if not os.path.exists(install_dir):
-            try:
-                os.makedirs(install_dir, exist_ok=True)
-            except PermissionError:
-                if not is_admin():
-                    messagebox.showinfo(
-                        "Administratorrechte erforderlich",
-                        "Das Programm benötigt Administratorrechte, um das Verzeichnis zu erstellen."
-                    )
-                    run_as_admin()
-                else:
-                    raise PermissionError(f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
+            os.makedirs(install_dir, exist_ok=True)
 
         # Prüfe Schreibrechte
         if not os.access(install_dir, os.W_OK):
@@ -83,14 +75,7 @@ def install(version, install_dir):
     except PermissionError as e:
         messagebox.showerror("Fehler", f"{e}\nBitte wählen Sie ein anderes Verzeichnis oder führen Sie das Programm als Administrator aus.")
     except Exception as e:
-        error_window = tk.Toplevel(root)
-        error_window.title("Fehler")
-        error_window.geometry("400x200")
-        error_window.resizable(False, False)
-
-        ttk.Label(error_window, text=f"Fehler bei der Installation: {e}", wraplength=350, font=("Arial", 12)).pack(pady=20)
-        ttk.Button(error_window, text="OK", command=error_window.destroy).pack(side="left", padx=10, pady=10)
-        ttk.Button(error_window, text="Als Admin ausführen", command=run_as_admin).pack(side="right", padx=10, pady=10)
+        messagebox.showerror("Fehler", f"Ein unerwarteter Fehler ist aufgetreten: {e}")
 
 def show_completion_page(exe_path):
     progress_frame.pack_forget()
@@ -125,16 +110,20 @@ def show_install_dir_selection(version):
             if not os.access(install_dir, os.W_OK):
                 raise PermissionError(f"Zugriff auf das Verzeichnis {install_dir} verweigert.")
             show_progress()
-            root.after(100, lambda: install(version, install_dir))
+            root.after(100, lambda: install(version_combobox.get(), install_dir))
         except PermissionError as e:
-            fallback_dir = os.path.join(os.environ['TEMP'], "HeitelCursors")
-            messagebox.showwarning(
+            fallback_dir = os.path.join(os.environ['USERPROFILE'], "Documents", "HeitelCursors")
+            response = messagebox.askyesno(
                 "Warnung",
-                f"{e}\nDas Programm wird versuchen, stattdessen in das Verzeichnis {fallback_dir} zu installieren."
+                f"{e}\nDas Programm schlägt vor, stattdessen in das Verzeichnis {fallback_dir} zu installieren.\n"
+                "Möchten Sie fortfahren?"
             )
-            install_dir_var.set(fallback_dir)
-            show_progress()
-            root.after(100, lambda: install(version, fallback_dir))
+            if response:  # User clicked "Yes"
+                show_progress()
+                root.after(100, lambda: install(version_combobox.get(), fallback_dir))
+            else:  # User clicked "No" or closed the popup
+                messagebox.showinfo("Aktion erforderlich", "Bitte wählen Sie ein neues Zielverzeichnis aus.")
+                show_install_dir_selection(version_combobox.get())
 
     if not hasattr(show_install_dir_selection, "initialized"):
         ttk.Label(install_dir_frame, text="Wählen Sie das Zielverzeichnis für die Installation:", font=("Arial", 12)).pack(pady=20)
