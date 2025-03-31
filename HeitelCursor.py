@@ -10,6 +10,7 @@ from PIL import Image, ImageTk, UnidentifiedImageError
 import pygame  # Sound-Abspielfunktion importieren
 import threading
 import tkinter as tk  # Importiere tkinter explizit
+from pynput import mouse  # Import the pynput library for global mouse hooks
 
 # Zielpfad für den Download
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
@@ -111,7 +112,9 @@ def play_sound():
 def play_click_sound():
     if click_sound_enabled.get() and os.path.exists(click_sound_file):
         try:
-            pygame.mixer.Sound(click_sound_file).play()
+            sound = pygame.mixer.Sound(click_sound_file)
+            sound.set_volume(volume_value)  # Set volume for the click sound
+            sound.play()
         except Exception as e:
             print(f"Fehler beim Abspielen des Klicksounds: {e}")
 
@@ -450,8 +453,11 @@ def show_loading_page():
     root.geometry("430x510")  # Größe des Hauptfensters um 20% vergrößern
     root.resizable(False, False)  # Fenstergröße nicht veränderbar
 
-    # Initialize click_sound_enabled after root is created
-    click_sound_enabled = tk.BooleanVar(value=True)  # Default to enabled
+    # Initialize click_sound_enabled as disabled by default
+    click_sound_enabled = tk.BooleanVar(value=False)  # Default to disabled
+
+    # Bind left mouse click to play_click_sound
+    root.bind("<Button-1>", lambda event: play_click_sound())
 
     # Icon setzen
     if os.path.exists(icon_file):
@@ -477,6 +483,17 @@ def show_main_page():
     frame.destroy()
     create_gui()
 
+# Function to handle global mouse clicks
+def on_click(x, y, button, pressed):
+    if pressed and button == mouse.Button.left:  # Check for left mouse button press
+        play_click_sound()
+
+# Start a global mouse listener
+def start_global_mouse_listener():
+    listener = mouse.Listener(on_click=on_click)
+    listener.start()
+
 if __name__ == "__main__":
+    start_global_mouse_listener()  # Start the global mouse listener
     show_loading_page()
     root.mainloop()  # Verwende root.mainloop() statt ctk.mainloop()

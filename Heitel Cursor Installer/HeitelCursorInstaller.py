@@ -10,7 +10,7 @@ import sys  # Add this import
 import tempfile  # Add this import
 
 # Prüfen, ob das Programm mit Administratorrechten ausgeführt wird
-if not ctypes.windll.shell32.IsUserAnAdmin():
+if not sys.argv[0].endswith('.py') and not ctypes.windll.shell32.IsUserAnAdmin():
     # Relaunch the script with admin privileges
     params = " ".join([f'"{arg}"' for arg in sys.argv])
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
@@ -23,7 +23,9 @@ def get_releases():
     response = requests.get(GITHUB_API)
     response.raise_for_status()
     releases = response.json()
-    return [f"{release['tag_name']} - {release['name']}" for release in releases]
+    # Filter out releases with the tag "Installer"
+    filtered_releases = [release for release in releases if "Installer" not in release['tag_name']]
+    return [f"{release['tag_name']} - {release['name']}" for release in filtered_releases]
 
 def download_file(url, dest):
     response = requests.get(url, stream=True)
@@ -188,10 +190,10 @@ except Exception as e:
     banner_label = ttk.Label(start_frame, text="Banner Bild nicht gefunden", font=("Arial", 18))
     banner_label.pack(pady=10)
 
-welcome_label = ttk.Label(start_frame, text="Willkommen zum Heitel Cursors Installer", font=("Arial", 18, "bold"))
+welcome_label = ttk.Label(start_frame, text="Willkommen zum Heitel Cursor Installer", font=("Arial", 18, "bold"))
 welcome_label.pack(pady=10)
 
-description_label = ttk.Label(start_frame, text="Dieser Installer hilft Ihnen, die gewünschte Version von Heitel Cursors herunterzuladen und zu installieren.", wraplength=500, font=("Arial", 12))
+description_label = ttk.Label(start_frame, text="Dieser Installer hilft Ihnen, die gewünschte Version von Heitel Cursor herunterzuladen und zu installieren.", wraplength=500, font=("Arial", 12))
 description_label.pack(pady=10)
 
 # Platzierung des "Weiter"-Buttons am unteren Rand
