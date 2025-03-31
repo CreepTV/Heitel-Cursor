@@ -92,6 +92,9 @@ pygame.mixer.init()
 # Lautstärkeregler Wert
 volume_value = 0.5
 
+# Variable to store the click sound file path
+click_sound_file = sound_file  # Default to HeitelHardwareSounde.mp3
+
 # Lautstärke einstellen
 def set_volume(value):
     global volume_value
@@ -103,6 +106,34 @@ def set_volume(value):
 def play_sound():
     pygame.mixer.music.load(sound_file)
     pygame.mixer.music.play()
+
+# Function to play the click sound
+def play_click_sound():
+    if click_sound_enabled.get() and os.path.exists(click_sound_file):
+        try:
+            pygame.mixer.Sound(click_sound_file).play()
+        except Exception as e:
+            print(f"Fehler beim Abspielen des Klicksounds: {e}")
+
+# Function to upload a custom click sound
+def upload_click_sound():
+    global click_sound_file
+    file_path = tk.filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3;*.wav")])
+    if file_path:
+        click_sound_file = file_path
+        show_notification("Klicksound erfolgreich geändert!")
+        update_click_sound_label()
+
+# Function to reset the click sound to the default
+def reset_click_sound():
+    global click_sound_file
+    click_sound_file = sound_file  # Reset to default sound
+    show_notification("Klicksound auf Standard zurückgesetzt!")
+    update_click_sound_label()
+
+# Function to update the label showing the current sound file
+def update_click_sound_label():
+    current_sound_label.configure(text=f"Aktuell: {os.path.basename(click_sound_file)}")
 
 # Lade eine benutzerdefinierte Cursor-Datei
 def set_custom_cursor():
@@ -129,7 +160,7 @@ def set_custom_cursor_with_size(size):
 def reset_cursor():
     ctypes.windll.user32.SystemParametersInfoW(87, 0, None, 0)
     show_notification("Standard-Cursor wiederhergestellt!")
-    play_sound()
+    play_click_sound()
 
 # Beendet das Programm
 def exit_program():
@@ -318,6 +349,28 @@ def create_gui():
     volume_percentage_label = ctk.CTkLabel(volume_frame, text=f"{int(volume_value * 100)}%", font=("Arial", 12))
     volume_percentage_label.pack(side="left", padx=(5, 10))
 
+    # Add click sound settings to the sound frame
+    click_sound_label = ctk.CTkLabel(sound_frame, text="Klicksound", font=("Arial", 16))
+    click_sound_label.pack(pady=5, anchor="w", padx=10)
+
+    click_sound_frame = ctk.CTkFrame(sound_frame, corner_radius=10)
+    click_sound_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    click_sound_checkbox = ctk.CTkCheckBox(click_sound_frame, text="Aktivieren", variable=click_sound_enabled)
+    click_sound_checkbox.pack(side="left", padx=(0, 10))
+
+    upload_sound_button = ctk.CTkButton(click_sound_frame, text="Eigenen Sound hochladen", command=upload_click_sound)
+    upload_sound_button.pack(side="left", padx=(10, 0))
+
+    # Label to display the current sound file
+    global current_sound_label
+    current_sound_label = ctk.CTkLabel(sound_frame, text=f"Aktuell: {os.path.basename(click_sound_file)}", font=("Arial", 10))
+    current_sound_label.pack(pady=(5, 0), anchor="w", padx=10)
+
+    # Move the reset button below the current sound label
+    reset_sound_button = ctk.CTkButton(sound_frame, text="Standard wiederherstellen", command=reset_click_sound)
+    reset_sound_button.pack(pady=(5, 0), anchor="w", padx=10)
+
     # Cursor Einstellungen
     cursor_label = ctk.CTkLabel(cursor_frame, text="Cursors", font=("Arial", 16))
     cursor_label.pack(pady=(0, 0), anchor="w", padx=10)  # Padding unten hinzufügen
@@ -391,11 +444,14 @@ def create_gui():
     button_exit.pack(pady=5, padx=10, anchor="e")  # Positioniere den Button unten rechts
 
 def show_loading_page():
-    global root
+    global root, click_sound_enabled  # Declare click_sound_enabled as global
     root = ctk.CTk()
     root.title("Heitel Cursor")
     root.geometry("430x510")  # Größe des Hauptfensters um 20% vergrößern
     root.resizable(False, False)  # Fenstergröße nicht veränderbar
+
+    # Initialize click_sound_enabled after root is created
+    click_sound_enabled = tk.BooleanVar(value=True)  # Default to enabled
 
     # Icon setzen
     if os.path.exists(icon_file):
