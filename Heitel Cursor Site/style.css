@@ -123,3 +123,85 @@ ul {
     top: 0;
     width: 100%;
 }
+
+.animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    opacity: 0.6;
+    animation: float 40s ease-in-out infinite, random-drift 40s linear infinite;
+    animation-delay: calc(var(--animation-seed, 0) * 5s);
+}
+
+.shape.cursor {
+    width: 30px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.6); /* White cursor */
+    clip-path: polygon(0 0, 100% 50%, 70% 60%, 80% 100%, 50% 70%, 0 100%);
+}
+
+.shape.pointer {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 87, 34, 0.6); /* Orange pointer */
+    clip-path: polygon(50% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+.shape.crosshair {
+    width: 60px;
+    height: 60px;
+    background: rgba(3, 218, 198, 0.6); /* Teal crosshair */
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+
+.shape.text {
+    width: 20px;
+    height: 60px;
+    background: rgba(187, 134, 252, 0.6); /* Purple text cursor */
+    clip-path: polygon(30% 0, 70% 0, 70% 100%, 30% 100%);
+}
+
+/* Add unique delays for each shape */
+.shape.cursor:nth-child(1) { --animation-seed: 0; }
+.shape.pointer:nth-child(2) { --animation-seed: 1; }
+.shape.crosshair:nth-child(3) { --animation-seed: 2; }
+.shape.text:nth-child(4) { --animation-seed: 3; }
+.shape.cursor:nth-child(5) { --animation-seed: 4; }
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-30px);
+    }
+}
+
+@keyframes random-drift {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    20% {
+        transform: translate(100px, -50px) rotate(45deg);
+    }
+    40% {
+        transform: translate(-150px, 100px) rotate(90deg);
+    }
+    60% {
+        transform: translate(200px, -100px) rotate(135deg);
+    }
+    80% {
+        transform: translate(-100px, 150px) rotate(180deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(225deg);
+    }
+}
