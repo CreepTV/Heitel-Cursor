@@ -62,12 +62,11 @@ main {
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 20px;
 }
 
 .container {
     text-align: left;
-    max-width: 930px;
+    max-width: 800px;
     padding: 40px;
     padding-top: 20px;
     border: 1px solid #333;
@@ -137,8 +136,8 @@ ul {
 .shape {
     position: absolute;
     opacity: 0.6;
-    animation: float 40s ease-in-out infinite, random-drift 40s linear infinite;
-    animation-delay: calc(var(--animation-seed, 0) * 5s);
+    animation: infinite-random-drift 120s ease-in-out infinite; /* Long duration for smooth transitions */
+    /* Removed animation-delay to ensure immediate start */
 }
 
 .shape.cursor {
@@ -169,12 +168,12 @@ ul {
     clip-path: polygon(30% 0, 70% 0, 70% 100%, 30% 100%);
 }
 
-/* Add unique delays for each shape */
-.shape.cursor:nth-child(1) { --animation-seed: 0; }
-.shape.pointer:nth-child(2) { --animation-seed: 1; }
-.shape.crosshair:nth-child(3) { --animation-seed: 2; }
-.shape.text:nth-child(4) { --animation-seed: 3; }
-.shape.cursor:nth-child(5) { --animation-seed: 4; }
+/* Removed unique delays for each shape */
+.shape.cursor:nth-child(1) { }
+.shape.pointer:nth-child(2) { }
+.shape.crosshair:nth-child(3) { }
+.shape.text:nth-child(4) { }
+.shape.cursor:nth-child(5) { }
 
 @keyframes float {
     0%, 100% {
@@ -185,23 +184,62 @@ ul {
     }
 }
 
-@keyframes random-drift {
+@keyframes drift {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(-80px, 60px) rotate(45deg);
+    }
+    50% {
+        transform: translate(80px, -60px) rotate(90deg);
+    }
+    75% {
+        transform: translate(-80px, -60px) rotate(135deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(180deg);
+    }
+}
+
+@keyframes infinite-random-drift {
     0% {
         transform: translate(0, 0) rotate(0deg);
     }
     20% {
-        transform: translate(100px, -50px) rotate(45deg);
+        transform: translate(200px, -150px) rotate(45deg);
     }
     40% {
-        transform: translate(-150px, 100px) rotate(90deg);
+        transform: translate(-300px, 200px) rotate(90deg);
     }
     60% {
-        transform: translate(200px, -100px) rotate(135deg);
+        transform: translate(250px, 300px) rotate(135deg);
     }
     80% {
-        transform: translate(-100px, 150px) rotate(180deg);
+        transform: translate(-200px, -250px) rotate(180deg);
     }
     100% {
         transform: translate(0, 0) rotate(225deg);
     }
+}
+
+/* Assign unique durations and variations for each shape */
+.shape.cursor:nth-child(1) {
+    animation: infinite-random-drift 130s ease-in-out infinite;
+}
+
+.shape.pointer:nth-child(2) {
+    animation: infinite-random-drift 140s ease-in-out infinite;
+}
+
+.shape.crosshair:nth-child(3) {
+    animation: infinite-random-drift 150s ease-in-out infinite;
+}
+
+.shape.text:nth-child(4) {
+    animation: infinite-random-drift 160s ease-in-out infinite;
+}
+
+.shape.cursor:nth-child(5) {
+    animation: infinite-random-drift 170s ease-in-out infinite;
 }
