@@ -16,6 +16,7 @@ from pynput import mouse  # Import the pynput library for global mouse hooks
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
 os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
+link_cursor_file = os.path.join(cursor_dir, "HeitelCursorLink.cur")
 image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
@@ -26,6 +27,7 @@ window_icon_file = os.path.join(cursor_dir, "windowsymbol_icon.png")
 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
+link_cursor_url = "https://cloud.dxra.de/s/72aYY5taZmSJNHy/download/Heitel-CursorLink.cur"  # Neue URL für Link-Cursor
 image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.png"
 icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
@@ -42,6 +44,7 @@ global image_label
 def download_files(progress_bar, loading_label):
     files_to_download = {
         cursor_file: cursor_url,
+        link_cursor_file: link_cursor_url,
         image_file: image_url,
         icon_file: icon_url,
         sound_file: sound_url,
@@ -142,7 +145,18 @@ def update_click_sound_label():
 def set_custom_cursor():
     cursor = ctypes.windll.user32.LoadImageW(0, cursor_file, win32con.IMAGE_CURSOR, 0, 0, win32con.LR_LOADFROMFILE)
     if cursor:
-        ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW
+        ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW (Normal Select)
+        
+        # Verwende separaten Link-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(link_cursor_file):
+            link_cursor = ctypes.windll.user32.LoadImageW(0, link_cursor_file, win32con.IMAGE_CURSOR, 0, 0, win32con.LR_LOADFROMFILE)
+            if link_cursor:
+                ctypes.windll.user32.SetSystemCursor(link_cursor, 32649)  # IDC_HAND (Link Select)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+            
         show_notification("Heitel Cursor wurde gesetzt!")
         play_sound()
     else:
@@ -153,7 +167,18 @@ def set_custom_cursor():
 def set_custom_cursor_with_size(size):
     cursor = ctypes.windll.user32.LoadImageW(0, cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
     if cursor:
-        ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW
+        ctypes.windll.user32.SetSystemCursor(cursor, 32512)  # IDC_ARROW (Normal Select)
+        
+        # Verwende separaten Link-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(link_cursor_file):
+            link_cursor = ctypes.windll.user32.LoadImageW(0, link_cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
+            if link_cursor:
+                ctypes.windll.user32.SetSystemCursor(link_cursor, 32649)  # IDC_HAND (Link Select)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+            
         play_sound()
     else:
         show_notification("Fehler beim Laden des Cursors")
