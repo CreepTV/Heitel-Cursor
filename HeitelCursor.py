@@ -11,12 +11,14 @@ import pygame  # Sound-Abspielfunktion importieren
 import threading
 import tkinter as tk  # Importiere tkinter explizit
 from pynput import mouse  # Import the pynput library for global mouse hooks
+import webbrowser  # Für das Öffnen von URLs im Browser
 
 # Zielpfad für den Download
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
 os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
 link_cursor_file = os.path.join(cursor_dir, "HeitelCursorLink.cur")
+text_cursor_file = os.path.join(cursor_dir, "HeitelCursorText.cur")
 image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
@@ -24,17 +26,22 @@ window_file = os.path.join(cursor_dir, "window_icon.png")
 sound_icon_file = os.path.join(cursor_dir, "sound_icon.png")
 cursor_icon_file = os.path.join(cursor_dir, "cursor_icon.png")
 window_icon_file = os.path.join(cursor_dir, "windowsymbol_icon.png")
+creep_media_logo_file = os.path.join(cursor_dir, "Creep MediaLogo.png")
+dxra_logo_file = os.path.join(cursor_dir, "DXRA_Logo.png")
 
 # URLs der Dateien
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
-link_cursor_url = "https://cloud.dxra.de/s/72aYY5taZmSJNHy/download/Heitel-CursorLink.cur"  # Neue URL für Link-Cursor
-image_url = "https://cloud.dxra.de/s/BYPieotWME2QACB/download/HeitelCursorsLogo.png"
+link_cursor_url = "https://cloud.dxra.de/s/NkF2ndtCjJXTXZC/download/Heitel-CursorLink.cur"  # Neue URL für Link-Cursor
+text_cursor_url = "https://cloud.dxra.de/s/4PHzdYoRn9pM2Jj/download/Heitelcaretfinal.cur"  # URL für Text-Cursor
+image_url = "https://cloud.dxra.de/s/N4AnLELBgi3Jci9/download/HeitelCursorLogo.png"
 icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
 window_url = "https://github.com/CreepTV/Heitel-Cursor/blob/main/recources/window_icon.png"
 sound_icon_url = "https://cloud.dxra.de/s/tkLdMagazPr7LJS/download/sound_icon.png"
 cursor_icon_url = "https://cloud.dxra.de/s/fSBCty8DwH9tSdq/download/cursor_icon.png"
 window_icon_url = "https://cloud.dxra.de/s/QzN3pR5L4qbdxHC/download/windowsymbol_icon.png"
+creep_media_logo_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/main/Heitel%20Cursor%20Site/data/Creep%20MediaLogo.png"
+dxra_logo_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/main/Heitel%20Cursor%20Site/data/DXRA_Logo.png"
 
 # Globales Variablen für das Bild
 global img
@@ -45,13 +52,16 @@ def download_files(progress_bar, loading_label):
     files_to_download = {
         cursor_file: cursor_url,
         link_cursor_file: link_cursor_url,
+        text_cursor_file: text_cursor_url,
         image_file: image_url,
         icon_file: icon_url,
         sound_file: sound_url,
         window_file: window_url,
         sound_icon_file: sound_icon_url,
         cursor_icon_file: cursor_icon_url,
-        window_icon_file: window_icon_url
+        window_icon_file: window_icon_url,
+        creep_media_logo_file: creep_media_logo_url,
+        dxra_logo_file: dxra_logo_url
     }
 
     total_files = len(files_to_download)
@@ -141,6 +151,68 @@ def reset_click_sound():
 def update_click_sound_label():
     current_sound_label.configure(text=f"Aktuell: {os.path.basename(click_sound_file)}")
 
+# Function to open URL in default browser
+def open_url(url):
+    try:
+        webbrowser.open(url)
+        show_notification(f"Öffne {url} im Browser...")
+    except Exception as e:
+        show_notification(f"Fehler beim Öffnen der URL: {e}")
+
+# Funktion zum Setzen des Text-Cursors (Caret)
+def set_text_cursor_color(color_hex):
+    """
+    Setzt den Text-Cursor (Caret) mit einer eigenen Cursor-Datei
+    color_hex: Hex-Farbcode (z.B. "#F2C4B0") - wird als Fallback verwendet
+    """
+    try:
+        # Verwende eigene Text-Cursor-Datei falls vorhanden
+        if os.path.exists(text_cursor_file):
+            # Caret-Größe auf 50% der Standard-Größe reduzieren (ca. 42px bei 85px Standard)
+            caret_size = int(85 * 0.5)  # 50% kleiner als Standard
+            text_cursor = ctypes.windll.user32.LoadImageW(0, text_cursor_file, win32con.IMAGE_CURSOR, caret_size, caret_size, win32con.LR_LOADFROMFILE)
+            if text_cursor:
+                ctypes.windll.user32.SetSystemCursor(text_cursor, 32513)  # IDC_IBEAM (Text Select)
+                return True
+        
+        # Fallback: Setze Registry-Einstellungen für Caret-Farbe
+        color_hex = color_hex.lstrip('#')
+        r = int(color_hex[0:2], 16)
+        g = int(color_hex[2:4], 16)
+        b = int(color_hex[4:6], 16)
+        
+        # Windows RGB-Wert
+        color_rgb = (r << 16) | (g << 8) | b
+        
+        import winreg
+        try:
+            # Personalization Registry Key für Akzentfarbe
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", 
+                                0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(key, "ColorPrevalence", 0, winreg.REG_DWORD, 1)
+            winreg.SetValueEx(key, "AccentColor", 0, winreg.REG_DWORD, color_rgb)
+            winreg.CloseKey(key)
+            
+            # Desktop Registry für Caret-Breite
+            key2 = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                                r"Control Panel\Desktop", 
+                                0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(key2, "CaretWidth", 0, winreg.REG_DWORD, 2)
+            winreg.CloseKey(key2)
+            
+            # Aktualisiere Systemeinstellungen
+            ctypes.windll.user32.SystemParametersInfoW(0x0015, 0, None, 0x0001)
+            
+            return True
+        except Exception as reg_error:
+            print(f"Registry-Fehler: {reg_error}")
+            return False
+            
+    except Exception as e:
+        print(f"Fehler beim Setzen des Text-Cursors: {e}")
+        return False
+
 # Lade eine benutzerdefinierte Cursor-Datei
 def set_custom_cursor():
     cursor = ctypes.windll.user32.LoadImageW(0, cursor_file, win32con.IMAGE_CURSOR, 0, 0, win32con.LR_LOADFROMFILE)
@@ -156,6 +228,9 @@ def set_custom_cursor():
                 ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
         else:
             ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+        
+        # Setze den Text-Cursor (Caret)
+        set_text_cursor_color("#F2C4B0")
             
         show_notification("Heitel Cursor wurde gesetzt!")
         play_sound()
@@ -178,6 +253,18 @@ def set_custom_cursor_with_size(size):
                 ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
         else:
             ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+        
+        # Setze den Text-Cursor (Caret) mit angepasster Größe
+        if os.path.exists(text_cursor_file):
+            # Caret-Größe auf 50% der normalen Cursor-Größe reduzieren
+            caret_size = int(size * 0.6)
+            text_cursor = ctypes.windll.user32.LoadImageW(0, text_cursor_file, win32con.IMAGE_CURSOR, caret_size, caret_size, win32con.LR_LOADFROMFILE)
+            if text_cursor:
+                ctypes.windll.user32.SetSystemCursor(text_cursor, 32513)  # IDC_IBEAM (Text Select)
+            else:
+                set_text_cursor_color("#F2C4B0")  # Fallback
+        else:
+            set_text_cursor_color("#F2C4B0")  # Fallback
             
         play_sound()
     else:
@@ -278,13 +365,21 @@ def create_gui():
     frame = ctk.CTkFrame(root, corner_radius=10)
     frame.pack(pady=20, padx=20, fill="both", expand=True)
 
+    # Header-Frame für das Logo
+    header_frame = ctk.CTkFrame(frame, height=100, corner_radius=10)
+    header_frame.pack(fill="x", padx=10, pady=(10, 0))
+    header_frame.pack_propagate(False)  # Verhindert, dass der Frame seine Größe ändert
+
     # Bild einfügen
     global img, image_label
     try:
         if os.path.exists(image_file):
             img = CTkImage(Image.open(image_file), size=(84, 84))
-            image_label = ctk.CTkLabel(frame, image=img, text="")
-            image_label.pack(anchor="ne", padx=10, pady=5)
+            image_label = ctk.CTkLabel(header_frame, image=img, text="")
+            image_label.pack(anchor="ne", padx=10, pady=8)
+            print(f"Logo erfolgreich geladen: {image_file}")  # Debug-Ausgabe
+        else:
+            print(f"Logo-Datei nicht gefunden: {image_file}")  # Debug-Ausgabe
     except (FileNotFoundError, UnidentifiedImageError) as e:
         print(f"Fehler beim Laden des Bildes: {e}")
     
@@ -323,42 +418,58 @@ def create_gui():
         sound_image = CTkImage(Image.open(sound_icon_file), size=(20, 20))
         cursor_image = CTkImage(Image.open(cursor_icon_file), size=(20, 20))
         window_image = CTkImage(Image.open(window_icon_file), size=(20, 20))
+        # Für Credits verwenden wir das HeitelCursor Logo
+        credits_image = CTkImage(Image.open(image_file), size=(20, 20))
     except (FileNotFoundError, UnidentifiedImageError) as e:
         print(f"Fehler beim Laden der Symbole: {e}")
         sound_image = None
         cursor_image = None
         window_image = None
+        credits_image = None
 
     sound_button = ctk.CTkButton(sidebar_frame, image=sound_image, text="", width=30, height=30,  # Größe anpassen
-                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame, window_frame))
+                                   command=lambda: show_settings_tab("Sound", sound_frame, cursor_frame, window_frame, credits_frame))
     sound_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
     cursor_button = ctk.CTkButton(sidebar_frame, image=cursor_image, text="", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame, window_frame))
+                                    command=lambda: show_settings_tab("Cursors", sound_frame, cursor_frame, window_frame, credits_frame))
     cursor_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
     window_button = ctk.CTkButton(sidebar_frame, image=window_image, text="", width=30, height=30,  # Größe anpassen
-                                    command=lambda: show_settings_tab("Window", sound_frame, cursor_frame, window_frame))
+                                    command=lambda: show_settings_tab("Window", sound_frame, cursor_frame, window_frame, credits_frame))
     window_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
 
-    # Frames für Sound-, Cursor- und Fenster-Einstellungen
+    credits_button = ctk.CTkButton(sidebar_frame, image=credits_image, text="", width=30, height=30,  # Größe anpassen
+                                     command=lambda: show_settings_tab("Credits", sound_frame, cursor_frame, window_frame, credits_frame))
+    credits_button.pack(pady=(20, 0), padx=5)  # Padding anpassen
+
+    # Frames für Sound-, Cursor-, Fenster- und Credits-Einstellungen
     sound_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
     cursor_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
     window_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
+    credits_frame = ctk.CTkFrame(settings_frame, corner_radius=0)
 
-    def show_settings_tab(value, sound_frame, cursor_frame, window_frame):
+    def show_settings_tab(value, sound_frame, cursor_frame, window_frame, credits_frame):
         if value == "Sound":
             sound_frame.pack(side="right", fill="both", expand=True)
             cursor_frame.pack_forget()
             window_frame.pack_forget()
+            credits_frame.pack_forget()
         elif value == "Cursors":
             cursor_frame.pack(side="right", fill="both", expand=True)
             sound_frame.pack_forget()
             window_frame.pack_forget()
+            credits_frame.pack_forget()
         elif value == "Window":
             window_frame.pack(side="right", fill="both", expand=True)
             sound_frame.pack_forget()
             cursor_frame.pack_forget()
+            credits_frame.pack_forget()
+        elif value == "Credits":
+            credits_frame.pack(side="right", fill="both", expand=True)
+            sound_frame.pack_forget()
+            cursor_frame.pack_forget()
+            window_frame.pack_forget()
 
     # Sound Einstellungen
     volume_label = ctk.CTkLabel(sound_frame, text="Lautstärke", font=("Arial", 16))
@@ -460,9 +571,176 @@ def create_gui():
     update_appearance_buttons("System")
 
     # Weitere Fenster-Einstellungen hier hinzufügen
+    
+    # Dateien-Management Sektion
+    files_label = ctk.CTkLabel(window_frame, text="Dateien-Management:", font=("Arial", 11))
+    files_label.pack(pady=(20, 5), anchor="w", padx=10)
+
+    files_frame = ctk.CTkFrame(window_frame, corner_radius=10)
+    files_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    redownload_button = ctk.CTkButton(files_frame, text="Dateien neu herunterladen", command=redownload_files, 
+                                     fg_color="#0078d4", hover_color="#106ebe")
+    redownload_button.pack(side="left", padx=5, pady=5)
 
     # Initiales Anzeigen des Sound-Tabs
-    show_settings_tab("Sound", sound_frame, cursor_frame, window_frame)
+    show_settings_tab("Sound", sound_frame, cursor_frame, window_frame, credits_frame)
+    
+    # Credits Einstellungen - Scrollable Frame
+    credits_scrollable = ctk.CTkScrollableFrame(credits_frame, corner_radius=10)
+    credits_scrollable.pack(fill="both", expand=True, padx=2, pady=2)
+
+    credits_title = ctk.CTkLabel(credits_scrollable, text="Credits", font=("Arial", 20, "bold"))
+    credits_title.pack(pady=(10, 8), anchor="w", padx=8)
+
+    # Entwickler Information
+    developer_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    developer_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    developer_label = ctk.CTkLabel(developer_frame, text="Entwickler:", font=("Arial", 14, "bold"))
+    developer_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    developer_info = ctk.CTkLabel(developer_frame, text="CreepTV", font=("Arial", 12))
+    developer_info.pack(pady=(0, 8), anchor="w", padx=8)
+
+    # Version Information
+    version_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    version_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    version_label = ctk.CTkLabel(version_frame, text="Version:", font=("Arial", 14, "bold"))
+    version_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    version_info = ctk.CTkLabel(version_frame, text="HeitelCursor v3.7", font=("Arial", 12))
+    version_info.pack(pady=(0, 8), anchor="w", padx=8)
+
+    # Website Information
+    website_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    website_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    website_label = ctk.CTkLabel(website_frame, text="Website:", font=("Arial", 14, "bold"))
+    website_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    website_info = ctk.CTkLabel(website_frame, text="https://heitelcursor.tech/", font=("Arial", 12), text_color="#1f6aa5", cursor="hand2")
+    website_info.pack(pady=(0, 8), anchor="w", padx=8)
+    
+    # Bind click event to open URL
+    website_info.bind("<Button-1>", lambda e: open_url("https://heitelcursor.tech/"))
+
+    # Verwendete Technologien
+    tech_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    tech_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    tech_label = ctk.CTkLabel(tech_frame, text="Verwendete Technologien:", font=("Arial", 14, "bold"))
+    tech_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    tech_list = [
+        "• Python 3.x",
+        "• CustomTkinter (GUI)",
+        "• Pillow (Bildverarbeitung)",
+        "• Pygame (Audio)",
+        "• Pynput (Maus-Events)",
+        "• Win32 API (Windows Integration)"
+    ]
+
+    for tech in tech_list:
+        tech_item = ctk.CTkLabel(tech_frame, text=tech, font=("Arial", 11), wraplength=300)
+        tech_item.pack(pady=(0, 1), anchor="w", padx=8)
+
+    tech_frame.pack(pady=(0, 5))
+
+    # Projektbeschreibung
+    description_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    description_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    description_label = ctk.CTkLabel(description_frame, text="Über HeitelCursor:", font=("Arial", 14, "bold"))
+    description_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    description_text = ctk.CTkLabel(description_frame, text="HeitelCursor ist ein benutzerfreundliches Tool zur Anpassung\ndes Windows-Cursors. Es ermöglicht das einfache Setzen\nvon benutzerdefinierten Cursors mit verschiedenen Größen\nund Funktionen.", font=("Arial", 11), justify="left", wraplength=300)
+    description_text.pack(pady=(0, 8), anchor="w", padx=8)
+
+    # Features
+    features_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    features_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    features_label = ctk.CTkLabel(features_frame, text="Features:", font=("Arial", 14, "bold"))
+    features_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    features_list = [
+        "• Benutzerdefinierte Cursor-Dateien",
+        "• Anpassbare Cursor-Größe (16-128px)",
+        "• Separate Link- und Text-Cursor",
+        "• Sound-Effekte und Benachrichtigungen",
+        "• Klicksound-Funktionalität",
+        "• Verschiedene Farbschemata",
+        "• Automatisches Dateien-Management"
+    ]
+
+    for feature in features_list:
+        feature_item = ctk.CTkLabel(features_frame, text=feature, font=("Arial", 11), wraplength=300)
+        feature_item.pack(pady=(0, 1), anchor="w", padx=8)
+
+    features_frame.pack(pady=(0, 5))
+
+    # Dankeschön
+    thanks_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    thanks_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    thanks_label = ctk.CTkLabel(thanks_frame, text="Besonderer Dank an:", font=("Arial", 14, "bold"))
+    thanks_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    thanks_text = ctk.CTkLabel(thanks_frame, text="• DXRA - für den ersten Cursor und die Idee des Heitel Cursors\n• Alle Nutzer und Supporter der HeitelCursor Community!\nDank euch wird dieses Projekt stetig weiterentwickelt.", font=("Arial", 12), justify="left", wraplength=300)
+    thanks_text.pack(pady=(0, 8), anchor="w", padx=8)
+
+    # Support Information
+    support_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    support_frame.pack(pady=5, padx=8, fill="x", anchor="w")
+
+    support_label = ctk.CTkLabel(support_frame, text="Support & Feedback:", font=("Arial", 14, "bold"))
+    support_label.pack(pady=(8, 3), anchor="w", padx=8)
+
+    support_text = ctk.CTkLabel(support_frame, text="Bei Fragen oder Problemen besuchen Sie bitte:\n• GitHub Repository: CreepTV/Heitel-Cursor\n• Issues und Feature Requests sind willkommen\n• Website: https://heitelcursor.tech/", font=("Arial", 11), justify="left", wraplength=300)
+    support_text.pack(pady=(0, 8), anchor="w", padx=8)
+
+    # Copyright
+    copyright_label = ctk.CTkLabel(credits_scrollable, text="© 2025 HerrHeitel - Alle Rechte vorbehalten", font=("Arial", 10))
+    copyright_label.pack(pady=(10, 5), anchor="center")
+    
+    # Logos Frame - Zwei kleine Logos nebeneinander
+    logos_frame = ctk.CTkFrame(credits_scrollable, corner_radius=10)
+    logos_frame.pack(pady=5, padx=8, fill="x", anchor="center")
+    
+    # Container für die Logos
+    logos_container = ctk.CTkFrame(logos_frame, corner_radius=0, fg_color="transparent")
+    logos_container.pack(pady=10, anchor="center")
+    
+    try:
+        # Erstes Logo (Creep MediaLogo)
+        creep_logo_file = os.path.join(cursor_dir, "Creep MediaLogo.png")
+        if os.path.exists(creep_logo_file):
+            logo1 = CTkImage(Image.open(creep_logo_file), size=(40, 40))
+            logo1_label = ctk.CTkLabel(logos_container, image=logo1, text="")
+            logo1_label.pack(side="left", padx=5)
+        elif os.path.exists(image_file):  # Fallback auf HeitelCursor Logo
+            logo1 = CTkImage(Image.open(image_file), size=(40, 40))
+            logo1_label = ctk.CTkLabel(logos_container, image=logo1, text="")
+            logo1_label.pack(side="left", padx=5)
+        
+        # Zweites Logo (DXRA Logo)
+        dxra_logo_file = os.path.join(cursor_dir, "DXRA_Logo.png")
+        if os.path.exists(dxra_logo_file):
+            logo2 = CTkImage(Image.open(dxra_logo_file), size=(40, 40))
+            logo2_label = ctk.CTkLabel(logos_container, image=logo2, text="")
+            logo2_label.pack(side="left", padx=5)
+        elif os.path.exists(window_icon_file):  # Fallback auf window_icon
+            logo2 = CTkImage(Image.open(window_icon_file), size=(40, 40))
+            logo2_label = ctk.CTkLabel(logos_container, image=logo2, text="")
+            logo2_label.pack(side="left", padx=5)
+        
+    except (FileNotFoundError, UnidentifiedImageError) as e:
+        print(f"Fehler beim Laden der Logos: {e}")
+        # Fallback: Nur Text wenn Logos nicht geladen werden können
+        fallback_label = ctk.CTkLabel(logos_container, text="CreepTV & DXRA", font=("Arial", 12))
+        fallback_label.pack(pady=10)
     
     # Leiste unten
     bottom_frame = ctk.CTkFrame(root, height=40, corner_radius=10)
@@ -517,6 +795,55 @@ def on_click(x, y, button, pressed):
 def start_global_mouse_listener():
     listener = mouse.Listener(on_click=on_click)
     listener.start()
+
+# Funktion zum erneuten Herunterladen der Dateien
+def redownload_files():
+    """
+    Lädt alle Dateien erneut herunter, auch wenn sie bereits existieren
+    """
+    def redownload_thread():
+        files_to_download = {
+            cursor_file: cursor_url,
+            link_cursor_file: link_cursor_url,
+            text_cursor_file: text_cursor_url,
+            image_file: image_url,
+            icon_file: icon_url,
+            sound_file: sound_url,
+            window_file: window_url,
+            sound_icon_file: sound_icon_url,
+            cursor_icon_file: cursor_icon_url,
+            window_icon_file: window_icon_url,
+            creep_media_logo_file: creep_media_logo_url,
+            dxra_logo_file: dxra_logo_url
+        }
+        
+        total_files = len(files_to_download)
+        files_downloaded = 0
+        
+        for file_path, file_url in files_to_download.items():
+            try:
+                # Lösche existierende Datei falls vorhanden
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                
+                # Lade Datei neu herunter
+                urllib.request.urlretrieve(file_url, file_path)
+                print(f"{os.path.basename(file_path)} neu heruntergeladen nach: {file_path}")
+                
+            except Exception as e:
+                print(f"Fehler beim erneuten Herunterladen von {os.path.basename(file_path)}: {e}")
+            
+            files_downloaded += 1
+        
+        # Zeige Erfolg-Benachrichtigung
+        root.after(0, lambda: show_notification("Alle Dateien wurden erfolgreich neu heruntergeladen!"))
+    
+    # Zeige Start-Benachrichtigung
+    show_notification("Starte erneuten Download...")
+    
+    # Starte Download in separatem Thread
+    download_thread = threading.Thread(target=redownload_thread)
+    download_thread.start()
 
 if __name__ == "__main__":
     start_global_mouse_listener()  # Start the global mouse listener
