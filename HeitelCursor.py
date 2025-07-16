@@ -12,6 +12,10 @@ import threading
 import tkinter as tk  # Importiere tkinter explizit
 from pynput import mouse  # Import the pynput library for global mouse hooks
 import webbrowser  # Für das Öffnen von URLs im Browser
+import requests  # Für HTTP-Requests zu myinstants.com
+import json  # Für JSON-Parsing
+import re  # Für Regex-Operationen
+from tkinter import filedialog  # Für Dateidialog
 
 # Zielpfad für den Download
 cursor_dir = os.path.join(os.path.expandvars("%USERPROFILE%"), "Documents", "HerrHeitel")
@@ -19,6 +23,8 @@ os.makedirs(cursor_dir, exist_ok=True)
 cursor_file = os.path.join(cursor_dir, "HeitelCursorNormal.cur")
 link_cursor_file = os.path.join(cursor_dir, "HeitelCursorLink.cur")
 text_cursor_file = os.path.join(cursor_dir, "HeitelCursorText.cur")
+wait_cursor_file = os.path.join(cursor_dir, "HeitelCursorWait.ani")
+progress_cursor_file = os.path.join(cursor_dir, "HeitelCursorProgress.ani")
 image_file = os.path.join(cursor_dir, "HeitelCursorsLogo.png")
 icon_file = os.path.join(cursor_dir, "HeitelCursorLogoNew.ico")  # Icon-Datei-Pfad hinzufügen
 sound_file = os.path.join(cursor_dir, "HeitelHardwareSounde.mp3")
@@ -33,6 +39,8 @@ dxra_logo_file = os.path.join(cursor_dir, "DXRA_Logo.png")
 cursor_url = "https://cloud.dxra.de/s/728PKXwP8rkxEj3/download/HeitelCursorNormal.cur"
 link_cursor_url = "https://cloud.dxra.de/s/NkF2ndtCjJXTXZC/download/Heitel-CursorLink.cur"  # Neue URL für Link-Cursor
 text_cursor_url = "https://cloud.dxra.de/s/4PHzdYoRn9pM2Jj/download/Heitelcaretfinal.cur"  # URL für Text-Cursor
+wait_cursor_url = "https://cloud.dxra.de/s/7oRegG452G88TcX/download/HeitelCursorLoadingCircle.ani"  # URL für Wait-Cursor
+progress_cursor_url = "https://cloud.dxra.de/s/WDkS6kceLkK8gkE/download/HeitelCursorProgress.ani"  # URL für Progress-Cursor
 image_url = "https://cloud.dxra.de/s/N4AnLELBgi3Jci9/download/HeitelCursorLogo.png"
 icon_url = "https://raw.githubusercontent.com/CreepTV/Heitel-Cursor/refs/heads/main/recources/HeitelCursorLogoNew.ico"
 sound_url = "https://cloud.dxra.de/s/ieX32WHSHYjrBYy/download/HeitelHardwareSounde.mp3"
@@ -53,6 +61,8 @@ def download_files(progress_bar, loading_label):
         cursor_file: cursor_url,
         link_cursor_file: link_cursor_url,
         text_cursor_file: text_cursor_url,
+        wait_cursor_file: wait_cursor_url,
+        progress_cursor_file: progress_cursor_url,
         image_file: image_url,
         icon_file: icon_url,
         sound_file: sound_url,
@@ -134,7 +144,7 @@ def play_click_sound():
 # Function to upload a custom click sound
 def upload_click_sound():
     global click_sound_file
-    file_path = tk.filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3;*.wav")])
+    file_path = filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3;*.wav")])
     if file_path:
         click_sound_file = file_path
         show_notification("Klicksound erfolgreich geändert!")
@@ -150,6 +160,331 @@ def reset_click_sound():
 # Function to update the label showing the current sound file
 def update_click_sound_label():
     current_sound_label.configure(text=f"Aktuell: {os.path.basename(click_sound_file)}")
+
+# MyInstants.com Integration
+def search_myinstants_sounds(query):
+    """
+    Sucht nach Sounds auf myinstants.com über die REST API
+    """
+    try:
+        api_url = f"https://myinstants-api.vercel.app/search?q={query}"
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        sounds = []
+        
+        # API gibt ein Objekt mit "data" Array zurück
+        if isinstance(data, dict) and 'data' in data:
+            sound_data = data['data']
+            for sound in sound_data[:10]:
+                if sound.get('title') and sound.get('mp3'):
+                    sounds.append({
+                        'name': sound['title'],
+                        'url': sound['mp3'],
+                        'id': sound.get('id', ''),
+                        'description': sound.get('description', ''),
+                        'tags': sound.get('tags', []),
+                        'favorites': sound.get('favorites', 0),
+                        'views': sound.get('views', 0),
+                        'uploader': sound.get('uploader', {})
+                    })
+        return sounds
+    except Exception as e:
+        print(f"Fehler bei MyInstants API Suche: {e}")
+        return []
+
+def get_popular_sounds():
+    """
+    Gibt eine Liste beliebter Sounds über die MyInstants API zurück
+    """
+    try:
+        api_url = "https://myinstants-api.vercel.app/best"
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        popular_sounds = []
+        
+        # API gibt ein Objekt mit "data" Array zurück
+        if isinstance(data, dict) and 'data' in data:
+            sound_data = data['data']
+            for sound in sound_data[:8]:
+                if sound.get('title'):
+                    popular_sounds.append(sound['title'])
+        
+        if not popular_sounds:
+            popular_sounds = [
+                "bruh", "oof", "wow", "no", "yes", "nope", "ohh", "ah", "error", "beep",
+                "click", "pop", "ding", "bell", "notification", "success", "fail", "tada",
+                "whoosh", "swoosh", "thud", "bonk", "boing", "splash", "crash", "boom",
+                "laugh", "scream", "sigh", "yawn", "sneeze", "cough", "whistle", "applause"
+            ]
+        return popular_sounds
+    except Exception as e:
+        print(f"Fehler bei MyInstants API Best: {e}")
+        return [
+            "bruh", "oof", "wow", "no", "yes", "nope", "ohh", "ah", "error", "beep",
+            "click", "pop", "ding", "bell", "notification", "success", "fail", "tada",
+            "whoosh", "swoosh", "thud", "bonk", "boing", "splash", "crash", "boom",
+            "laugh", "scream", "sigh", "yawn", "sneeze", "cough", "whistle", "applause"
+        ]
+
+def download_myinstants_sound(audio_url, sound_name):
+    """
+    Lädt einen Sound von MyInstants herunter
+    """
+    try:
+        safe_name = re.sub(r'[<>:"/\\|?*]', '_', sound_name)
+        file_extension = '.mp3' if audio_url.endswith('.mp3') else '.wav'
+        filename = f"{safe_name}{file_extension}"
+        sound_path = os.path.join(cursor_dir, "myinstants_sounds")
+        os.makedirs(sound_path, exist_ok=True)
+        file_path = os.path.join(sound_path, filename)
+        response = requests.get(audio_url, timeout=30)
+        response.raise_for_status()
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+        return file_path
+    except Exception as e:
+        print(f"Fehler beim Herunterladen des Sounds: {e}")
+        return None
+
+def play_myinstants_sound(file_path):
+    """
+    Spielt einen MyInstants-Sound ab
+    """
+    try:
+        if os.path.exists(file_path):
+            sound = pygame.mixer.Sound(file_path)
+            sound.set_volume(volume_value)
+            sound.play()
+            return True
+    except Exception as e:
+        print(f"Fehler beim Abspielen des Sounds: {e}")
+    return False
+
+def set_myinstants_as_click_sound(file_path):
+    """
+    Setzt einen MyInstants-Sound als Klicksound
+    """
+    global click_sound_file
+    if os.path.exists(file_path):
+        click_sound_file = file_path
+        show_notification("MyInstants Sound als Klicksound gesetzt!")
+        update_click_sound_label()
+        return True
+    return False
+
+def open_myinstants_browser():
+    """
+    Öffnet ein Fenster zum Durchsuchen und Auswählen von MyInstants-Sounds
+    """
+    # Neues Fenster erstellen
+    myinstants_window = Toplevel(root)
+    myinstants_window.title("MyInstants Sound Browser")
+    myinstants_window.geometry("600x500")
+    myinstants_window.resizable(True, True)
+    
+    # Icon setzen falls vorhanden
+    if os.path.exists(icon_file):
+        myinstants_window.iconbitmap(icon_file)
+    
+    # Hauptframe
+    main_frame = ctk.CTkFrame(myinstants_window)
+    main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    # Such-Bereich
+    search_frame = ctk.CTkFrame(main_frame)
+    search_frame.pack(fill="x", padx=10, pady=10)
+    
+    search_label = ctk.CTkLabel(search_frame, text="Suche nach Sounds:", font=("Arial", 14))
+    search_label.pack(pady=(10, 5), anchor="w", padx=10)
+    
+    # Eingabefeld und Button nebeneinander
+    search_input_frame = ctk.CTkFrame(search_frame)
+    search_input_frame.pack(fill="x", padx=10, pady=5)
+    
+    search_entry = ctk.CTkEntry(search_input_frame, placeholder_text="z.B. 'bruh', 'oof', 'wow'...")
+    search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+    
+    search_button = ctk.CTkButton(search_input_frame, text="Suchen", width=100)
+    search_button.pack(side="right")
+    
+    # Ergebnis-Bereich
+    results_frame = ctk.CTkFrame(main_frame)
+    results_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    results_label = ctk.CTkLabel(results_frame, text="Suchergebnisse:", font=("Arial", 14))
+    results_label.pack(pady=(10, 5), anchor="w", padx=10)
+    
+    # Scrollable Frame für Ergebnisse
+    scrollable_frame = ctk.CTkScrollableFrame(results_frame)
+    scrollable_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    # Status Label
+    status_label = ctk.CTkLabel(results_frame, text="Geben Sie einen Suchbegriff ein und klicken Sie auf 'Suchen'", font=("Arial", 11))
+    status_label.pack(pady=5)
+    
+    # Aktuelle Suche Variable
+    current_search_results = []
+    
+    def search_sounds():
+        query = search_entry.get().strip()
+        if not query:
+            status_label.configure(text="Bitte geben Sie einen Suchbegriff ein")
+            return
+        for widget in scrollable_frame.winfo_children():
+            widget.destroy()
+        status_label.configure(text="Suche läuft...")
+        search_button.configure(text="Suche...", state="disabled")
+        def search_thread():
+            try:
+                sounds = search_myinstants_sounds(query)
+                def update_results():
+                    nonlocal current_search_results
+                    current_search_results = sounds
+                    if not sounds:
+                        status_label.configure(text="Keine Sounds gefunden. Versuchen Sie einen anderen Suchbegriff.")
+                        no_results_label = ctk.CTkLabel(scrollable_frame, text="Keine Ergebnisse gefunden", font=("Arial", 12))
+                        no_results_label.pack(pady=20)
+                    else:
+                        status_label.configure(text=f"{len(sounds)} Sounds gefunden")
+                        for i, sound in enumerate(sounds):
+                            create_sound_item(scrollable_frame, sound, i)
+                    search_button.configure(text="Suchen", state="normal")
+                myinstants_window.after(0, update_results)
+            except Exception as e:
+                def show_error():
+                    status_label.configure(text=f"Fehler bei der Suche: {str(e)}")
+                    search_button.configure(text="Suchen", state="normal")
+                myinstants_window.after(0, show_error)
+        threading.Thread(target=search_thread, daemon=True).start()
+    
+    def create_sound_item(parent, sound, index):
+        """
+        Erstellt ein GUI-Element für einen Sound
+        """
+        item_frame = ctk.CTkFrame(parent)
+        item_frame.pack(fill="x", padx=5, pady=5)
+        
+        # Sound-Name
+        name_label = ctk.CTkLabel(item_frame, text=sound['name'], font=("Arial", 12, "bold"))
+        name_label.pack(pady=(10, 5), anchor="w", padx=10)
+        
+        # Zusätzliche Informationen anzeigen (Views, Favorites)
+        if sound.get('views', 0) > 0 or sound.get('favorites', 0) > 0:
+            info_text = f"👁 {sound.get('views', 0)} Aufrufe • ⭐ {sound.get('favorites', 0)} Favoriten"
+            info_label = ctk.CTkLabel(item_frame, text=info_text, font=("Arial", 10), text_color="gray")
+            info_label.pack(pady=(0, 5), anchor="w", padx=10)
+        
+        # Description anzeigen falls vorhanden
+        if sound.get('description'):
+            desc_text = sound['description'][:100] + "..." if len(sound['description']) > 100 else sound['description']
+            desc_label = ctk.CTkLabel(item_frame, text=desc_text, font=("Arial", 9), text_color="gray", wraplength=500)
+            desc_label.pack(pady=(0, 5), anchor="w", padx=10)
+        
+        # Button-Frame
+        button_frame = ctk.CTkFrame(item_frame)
+        button_frame.pack(fill="x", padx=10, pady=(0, 10))
+        
+        # Anhören Button
+        play_button = ctk.CTkButton(button_frame, text="▶ Anhören", width=100, fg_color="#1f6aa5", hover_color="#1e5a96")
+        play_button.pack(side="left", padx=(0, 10))
+        
+        # Auswählen Button
+        select_button = ctk.CTkButton(button_frame, text="✓ Auswählen", width=100, fg_color="#2b8a3e", hover_color="#2a7737")
+        select_button.pack(side="left")
+        
+        # Status Label für diesen Sound
+        item_status_label = ctk.CTkLabel(item_frame, text="", font=("Arial", 10))
+        item_status_label.pack(pady=(0, 5), anchor="w", padx=10)
+        
+        def play_sound():
+            play_button.configure(text="Laden...", state="disabled")
+            item_status_label.configure(text="Lade Sound...")
+            
+            def play_thread():
+                try:
+                    # Verwende die direkte Audio-URL
+                    audio_url = sound['url']
+                    
+                    # Lade Sound temporär herunter
+                    temp_file = download_myinstants_sound(audio_url, f"temp_{sound['name']}")
+                    if temp_file:
+                        # Spiele Sound ab
+                        if play_myinstants_sound(temp_file):
+                            def show_success():
+                                item_status_label.configure(text="Sound wird abgespielt")
+                                play_button.configure(text="▶ Anhören", state="normal")
+                            myinstants_window.after(0, show_success)
+                        else:
+                            def show_error():
+                                item_status_label.configure(text="Fehler beim Abspielen")
+                                play_button.configure(text="▶ Anhören", state="normal")
+                            myinstants_window.after(0, show_error)
+                    else:
+                        def show_error():
+                            item_status_label.configure(text="Fehler beim Laden")
+                            play_button.configure(text="▶ Anhören", state="normal")
+                        myinstants_window.after(0, show_error)
+                        
+                except Exception as e:
+                    def show_error():
+                        item_status_label.configure(text=f"Fehler: {str(e)}")
+                        play_button.configure(text="▶ Anhören", state="normal")
+                    myinstants_window.after(0, show_error)
+            
+            threading.Thread(target=play_thread, daemon=True).start()
+        
+        def select_sound():
+            select_button.configure(text="Laden...", state="disabled")
+            item_status_label.configure(text="Lade Sound herunter...")
+            
+            def select_thread():
+                try:
+                    # Verwende die direkte Audio-URL
+                    audio_url = sound['url']
+                    
+                    # Lade Sound dauerhaft herunter
+                    downloaded_file = download_myinstants_sound(audio_url, sound['name'])
+                    if downloaded_file:
+                        # Setze als Klicksound
+                        if set_myinstants_as_click_sound(downloaded_file):
+                            def show_success():
+                                item_status_label.configure(text="✓ Als Klicksound gesetzt!")
+                                select_button.configure(text="✓ Ausgewählt", state="disabled", fg_color="green")
+                                # Schließe das Fenster nach kurzer Verzögerung
+                                myinstants_window.after(2000, myinstants_window.destroy)
+                            myinstants_window.after(0, show_success)
+                        else:
+                            def show_error():
+                                item_status_label.configure(text="Fehler beim Setzen als Klicksound")
+                                select_button.configure(text="✓ Auswählen", state="normal")
+                            myinstants_window.after(0, show_error)
+                    else:
+                        def show_error():
+                            item_status_label.configure(text="Fehler beim Download")
+                            select_button.configure(text="✓ Auswählen", state="normal")
+                        myinstants_window.after(0, show_error)
+                        
+                except Exception as e:
+                    def show_error():
+                        item_status_label.configure(text=f"Fehler: {str(e)}")
+                        select_button.configure(text="✓ Auswählen", state="normal")
+                    myinstants_window.after(0, show_error)
+            
+            threading.Thread(target=select_thread, daemon=True).start()
+        
+        # Button-Events verbinden
+        play_button.configure(command=play_sound)
+        select_button.configure(command=select_sound)
+    
+    # Such-Events
+    search_button.configure(command=search_sounds)
+    search_entry.bind("<Return>", lambda e: search_sounds())
+    
+    # Schließen Button
+    close_button = ctk.CTkButton(main_frame, text="Schließen", command=myinstants_window.destroy, fg_color="red", hover_color="darkred")
+    close_button.pack(pady=10)
 
 # Function to open URL in default browser
 def open_url(url):
@@ -229,6 +564,26 @@ def set_custom_cursor():
         else:
             ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
         
+        # Verwende separaten Wait-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(wait_cursor_file):
+            wait_cursor = ctypes.windll.user32.LoadImageW(0, wait_cursor_file, win32con.IMAGE_CURSOR, 0, 0, win32con.LR_LOADFROMFILE)
+            if wait_cursor:
+                ctypes.windll.user32.SetSystemCursor(wait_cursor, 32514)  # IDC_WAIT (Wait/Busy)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32514)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32514)  # Fallback auf normalen Cursor
+        
+        # Verwende separaten Progress-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(progress_cursor_file):
+            progress_cursor = ctypes.windll.user32.LoadImageW(0, progress_cursor_file, win32con.IMAGE_CURSOR, 0, 0, win32con.LR_LOADFROMFILE)
+            if progress_cursor:
+                ctypes.windll.user32.SetSystemCursor(progress_cursor, 32650)  # IDC_APPSTARTING (Working In Background)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32650)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32650)  # Fallback auf normalen Cursor
+        
         # Setze den Text-Cursor (Caret)
         set_text_cursor_color("#F2C4B0")
             
@@ -253,6 +608,26 @@ def set_custom_cursor_with_size(size):
                 ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
         else:
             ctypes.windll.user32.SetSystemCursor(cursor, 32649)  # Fallback auf normalen Cursor
+        
+        # Verwende separaten Wait-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(wait_cursor_file):
+            wait_cursor = ctypes.windll.user32.LoadImageW(0, wait_cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
+            if wait_cursor:
+                ctypes.windll.user32.SetSystemCursor(wait_cursor, 32514)  # IDC_WAIT (Wait/Busy)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32514)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32514)  # Fallback auf normalen Cursor
+        
+        # Verwende separaten Progress-Cursor falls vorhanden, sonst den normalen Cursor
+        if os.path.exists(progress_cursor_file):
+            progress_cursor = ctypes.windll.user32.LoadImageW(0, progress_cursor_file, win32con.IMAGE_CURSOR, size, size, win32con.LR_LOADFROMFILE)
+            if progress_cursor:
+                ctypes.windll.user32.SetSystemCursor(progress_cursor, 32650)  # IDC_APPSTARTING (Working In Background)
+            else:
+                ctypes.windll.user32.SetSystemCursor(cursor, 32650)  # Fallback auf normalen Cursor
+        else:
+            ctypes.windll.user32.SetSystemCursor(cursor, 32650)  # Fallback auf normalen Cursor
         
         # Setze den Text-Cursor (Caret) mit angepasster Größe
         if os.path.exists(text_cursor_file):
@@ -501,6 +876,13 @@ def create_gui():
     upload_sound_button = ctk.CTkButton(click_sound_frame, text="Eigenen Sound hochladen", command=upload_click_sound)
     upload_sound_button.pack(side="left", padx=(10, 0))
 
+    # MyInstants Button in separater Zeile hinzufügen
+    myinstants_frame = ctk.CTkFrame(sound_frame, corner_radius=10)
+    myinstants_frame.pack(pady=5, padx=10, fill="x", anchor="w")
+
+    myinstants_button = ctk.CTkButton(myinstants_frame, text="MyInstants durchsuchen", command=open_myinstants_browser, fg_color="#ff6b35", hover_color="#e85a2b")
+    myinstants_button.pack(side="left", padx=10, pady=5)
+
     # Label to display the current sound file
     global current_sound_label
     current_sound_label = ctk.CTkLabel(sound_frame, text=f"Aktuell: {os.path.basename(click_sound_file)}", font=("Arial", 10))
@@ -672,7 +1054,8 @@ def create_gui():
         "• Sound-Effekte und Benachrichtigungen",
         "• Klicksound-Funktionalität",
         "• Verschiedene Farbschemata",
-        "• Automatisches Dateien-Management"
+        "• Automatisches Dateien-Management",
+        "• Hello im Muhammed!"
     ]
 
     for feature in features_list:
@@ -806,6 +1189,8 @@ def redownload_files():
             cursor_file: cursor_url,
             link_cursor_file: link_cursor_url,
             text_cursor_file: text_cursor_url,
+            wait_cursor_file: wait_cursor_url,
+            progress_cursor_file: progress_cursor_url,
             image_file: image_url,
             icon_file: icon_url,
             sound_file: sound_url,

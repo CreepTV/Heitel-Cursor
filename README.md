@@ -42,12 +42,13 @@ npm start
 ✔ **Vergrößerter Cursor** – Bessere Sichtbarkeit durch eine vergrößerte Darstellung. <br>
 ✔ **Einfache Bedienung** – Wechsel bequem zwischen verschiedenen Cursor-Designs per Schaltflächensteuerung. <br>
 
-## :memo: Kommt bald
+## :memo: **Kommt bald** bei V3.7 - V4.0
 
 🔹 **Neue Steuerungsoptionen** – Einfacheres Umschalten zwischen verschiedenen Cursor-Designs per Tastenkombination. <br>
 🔹 **Bessere Benutzeroberfläche** – Verbessertes Design für eine intuitivere und modernere Bedienung. <br>
 🔹 **Bugfixes & Stabilitätsverbesserungen** – Behebt kleinere Probleme aus der Beta und sorgt für eine stabilere Anwendung. <br>
 🔹 **Neue und verschiedene Cursor-Designs** – Ab sofort stehen dir noch mehr Cursor-Optionen zur Verfügung, um deinen Arbeitsbereich weiter zu personalisieren. <br>
+🔹 **Klicksound-Integration** – Durchsuche Sounds von [myinstants.com](https://www.myinstants.com), wähle deine Lieblingssounds aus und höre sie zur Probe an. Wenn der Klicksound aktiviert ist, werden die ausgewählten Sounds bei jedem Mausklick abgespielt. <br>
 
 ### Images
 
