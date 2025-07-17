@@ -587,7 +587,7 @@ def set_custom_cursor():
         # Setze den Text-Cursor (Caret)
         set_text_cursor_color("#F2C4B0")
             
-        show_notification("Heitel Cursor wurde gesetzt!")
+        show_notification("MuhammedCursor wurde gesetzt!")
         play_sound()
     else:
         show_notification("Fehler beim Laden des Cursors")
@@ -771,7 +771,7 @@ def create_gui():
     label = ctk.CTkLabel(cursor_frame, text="Wähle einen Cursor:", font=("Arial", 16))
     label.pack(pady=10, anchor="w", padx=10)  # Linken Abstand hinzufügen
     
-    button_set = ctk.CTkButton(cursor_frame, text="Heitel Cursor setzen", command=lambda: set_custom_cursor_with_size(int(cursor_size_slider.get())), fg_color="#cc7000", hover_color="#994c00")
+    button_set = ctk.CTkButton(cursor_frame, text="MuhammedCursor setzen", command=lambda: set_custom_cursor_with_size(int(cursor_size_slider.get())), fg_color="#cc7000", hover_color="#994c00")
     button_set.pack(pady=5, anchor="w", padx=10)  # Linken Abstand hinzufügen
     
     button_reset = ctk.CTkButton(cursor_frame, text="Standard-Cursor wiederherstellen", command=reset_cursor)
@@ -1071,7 +1071,7 @@ def create_gui():
     thanks_label = ctk.CTkLabel(thanks_frame, text="Besonderer Dank an:", font=("Arial", 14, "bold"))
     thanks_label.pack(pady=(8, 3), anchor="w", padx=8)
 
-    thanks_text = ctk.CTkLabel(thanks_frame, text="• DXRA - für den ersten Cursor und die Idee des Heitel Cursors\n• Alle Nutzer und Supporter der HeitelCursor Community!\nDank euch wird dieses Projekt stetig weiterentwickelt.", font=("Arial", 12), justify="left", wraplength=300)
+    thanks_text = ctk.CTkLabel(thanks_frame, text="• DXRA - für den ersten Cursor und die Idee des MuhammedCursors\n• Alle Nutzer und Supporter der HeitelCursor Community!\nDank euch wird dieses Projekt stetig weiterentwickelt.", font=("Arial", 12), justify="left", wraplength=300)
     thanks_text.pack(pady=(0, 8), anchor="w", padx=8)
 
     # Support Information
@@ -1085,7 +1085,7 @@ def create_gui():
     support_text.pack(pady=(0, 8), anchor="w", padx=8)
 
     # Copyright
-    copyright_label = ctk.CTkLabel(credits_scrollable, text="© 2025 HerrHeitel - Alle Rechte vorbehalten", font=("Arial", 10))
+    copyright_label = ctk.CTkLabel(credits_scrollable, text="© 2025 HerrMuhammed- Alle Rechte vorbehalten", font=("Arial", 10))
     copyright_label.pack(pady=(10, 5), anchor="center")
     
     # Logos Frame - Zwei kleine Logos nebeneinander
@@ -1135,7 +1135,7 @@ def create_gui():
 def show_loading_page():
     global root, click_sound_enabled  # Declare click_sound_enabled as global
     root = ctk.CTk()
-    root.title("Heitel Cursor")
+    root.title("MuhammedCursor")
     root.geometry("430x510")  # Größe des Hauptfensters um 20% vergrößern
     root.resizable(False, False)  # Fenstergröße nicht veränderbar
 
